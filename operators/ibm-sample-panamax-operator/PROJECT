@@ -1,0 +1,14 @@
+domain: ibm.com
+layout: go.kubebuilder.io/v2
+projectName: ibm-sample-panamax-operator
+repo: github.ibm.com/CloudPakOpenContent/ibm-sample-panamax-operator
+resources:
+- group: sample
+  kind: Panamax
+  version: v1beta1
+- group: sample
+  kind: PanamaxConfig
+  version: v1beta1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

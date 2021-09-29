@@ -1,0 +1,24 @@
+# permissions for end users to edit panamaxes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: panamax-editor-role
+rules:
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxes/status
+  verbs:
+  - get

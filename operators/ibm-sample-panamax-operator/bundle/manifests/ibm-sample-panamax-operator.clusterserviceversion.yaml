@@ -1,0 +1,568 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[{"apiVersion":"sample.ibm.com/v1beta1","kind":"Panamax","metadata":{"labels":{"app.kubernetes.io/instance":"sample-panamax","app.kubernetes.io/managed-by":"panamax-operator","app.kubernetes.io/name":"panamax-operator"},"name":"sample-panamax"},"spec":{"license":{"accept":false},"systemStatus":"betterThanYesterday","version":"v1.0.0"},"status":{}},{"apiVersion":"sample.ibm.com/v1beta1","kind":"PanamaxConfig","metadata":{"labels":{"app.kubernetes.io/instance":"sample-panamax","app.kubernetes.io/managed-by":"panamax-operator","app.kubernetes.io/name":"panamax-operator"},"name":"sample-config-panamax"},"spec":{"supportedOperandChannels":["channel-1.1","channel-1.3"],"supportedOperandVersions":["v1.0.0","v1.0.1","v1.0.2","v2.0"]},"status":{}}]'
+    capabilities: Basic Install
+    description: Panamax sample reference implementation
+    operators.operatorframework.io/builder: operator-sdk-v1.3.2
+    operators.operatorframework.io/internal-objects: '["panamaxconfigs.sample.ibm.com"]'
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+    operatorframework.io/arch.amd64: supported
+    operatorframework.io/arch.ppc64le: supported
+    operatorframework.io/arch.s390x: supported
+    operatorframework.io/os.linux: supported
+  name: ibm-sample-panamax-operator.v4.1.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: PanamaxConfig is the Schema for the panamaxconfigs API
+      displayName: Panamax Custom Implementation
+      kind: PanamaxConfig
+      name: panamaxconfigs.sample.ibm.com
+      resources:
+      - kind: PanamaxConfigs
+        name: ""
+        version: v1beta1
+      specDescriptors:
+      - displayName: Supported Operand Channels
+        path: supportedOperandChannels
+      - displayName: Supported Operand Versions
+        path: supportedOperandVersions
+      statusDescriptors:
+      - displayName: Last Update
+        path: lastUpdate
+      version: v1beta1
+    - description: Panamax is the Schema for the nginxes API
+      displayName: Panamax Custom Implementation
+      kind: Panamax
+      name: panamaxes.sample.ibm.com
+      resources:
+      - kind: ConfigMaps
+        name: ""
+        version: v1
+      - kind: Deployments
+        name: ""
+        version: v1
+      - kind: Panamaxes
+        name: ""
+        version: v1beta1
+      - kind: Pods
+        name: ""
+        version: v1
+      - kind: Replicasets
+        name: ""
+        version: v1
+      - kind: Route
+        name: ""
+        version: v1
+      - kind: Services
+        name: ""
+        version: v1
+      specDescriptors:
+      - displayName: Operand License Structure
+        path: license
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Accept Operand License
+        path: license.accept
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - displayName: Key From
+        path: license.keyFrom
+      - displayName: Secret Key Ref
+        path: license.keyFrom.secretKeyRef
+      - displayName: Operand License Key
+        path: license.keyFrom.secretKeyRef.name
+        x-descriptors:
+        - urn:alm:descriptor:io.kubernetes:Secret
+      - displayName: License
+        path: license.license
+      - displayName: Measure
+        path: license.measure
+      - displayName: Use
+        path: license.use
+      - displayName: Operand Running Status
+        path: systemStatus
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - displayName: Operand Version
+        path: version
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      statusDescriptors:
+      - displayName: Conditions
+        path: conditions
+      - displayName: Message
+        path: conditions[0].message
+      - displayName: Reason
+        path: conditions[0].reason
+      - displayName: Status
+        path: conditions[0].status
+      - displayName: Type
+        path: conditions[0].type
+      - displayName: Name
+        path: name
+      - displayName: Version
+        path: versions
+      - displayName: Available
+        path: versions.available
+      - displayName: Channels
+        path: versions.available.channels
+      - displayName: Name
+        path: versions.available.channels[0].name
+      - displayName: Versions
+        path: versions.available.versions
+      - displayName: Name
+        path: versions.available.versions[0].name
+      - displayName: Reconciled
+        path: versions.reconciled
+      version: v1beta1
+  description: "The IBM Panamax Operator is a reference implementation operator developed by the IBM Cloud Pak Engineering squad.  For more information visit the [Github Repository](https://github.ibm.com/CloudPakOpenContent/ibm-sample-panamax-operator).\n# Name\nIBM&reg; Panamax Operator\n# Introduction\n## Details\nThe IBM&reg; Panamax Operator is the reference implementation operator produced by the Cloud Pak Engineering team.  This operator is meant to be used as a best practices and standards implementation, and will provide guidance to teams looking to design and create an operator for their offering.\nFor more information and guidance refer to the following:\n* [Playbook](https://playbook.cloudpaklab.ibm.com/)\n* cloudpak-certify channel on slack\n## Features\n*  **Panamax Operator**\n  Panamax Operator is a reference implementation operator, that wraps and ngxinx operator.\n# Details\n## Prerequisites\nAn `ImageContentSourcePolicy` resource must be deployed to the cluster to mirror the images in the operator manifests to the correct location.\n```yaml\napiVersion: operator.openshift.io/v1alpha1\nkind: ImageContentSourcePolicy\nmetadata:\n  name: mirror-config\nspec:\n  repositoryDigestMirrors:\n  - mirrors:\n    - cp.stg.icr.io/cp\n    source: cp.icr.io/cp\n  - mirrors:\n    - cp.stg.icr.io/cp\n    source: icr.io/cpopen\n```\nNon-OLM installs:\nTo install the operator through a mechanism other than OLM, the ServiceAccount that deploys the operator deployment must have RBAC access to create ClusterRole resources.\n### Resources Required\n* Describe Minimum System Resources Required\nMinimum scheduling capacity:\n| Software  | Memory (GB) | CPU (cores) | Disk (GB) | Nodes |\n| --------- | ----------- | ----------- | --------- | ----- |\n|           |             |             |           |       |\n| **Total** |             |             |           |       |\n# Installing\n* Include installation instructions or links to documentation\n* Include the basic things necessary to install the product\n* Include environment setup or any other items required\n## Configuration\n* Provide configuration instructions if any\n## Storage\n* Define how storage works with the workload\n* Dynamic vs PV pre-created\n* Considerations if using hostpath, local volume, empty dir\n* Loss of data considerations\n* Any special quality of service or security needs for storage\n## SecurityContextConstraints Requirements\n### Panamax Controller\nThe Sample Panamax Operator controller currently runs with the default Red Hat `restricted` SCC.\nThis Operator also defines a custom SecurityContextConstraints object which is used to finely control the permissions/capabilities needed to deploy this Operator, the definition of this SCC is shown below:\n#### Custom SecurityContextConstraints definition:\n```yaml\napiVersion: security.openshift.io/v1\nkind: SecurityContextConstraints\nmetadata:\n  name: panamaxSCC\nallowHostPorts: false\npriority: null\nrequiredDropCapabilities:\n  - MKNOD\nallowPrivilegedContainer: false\nrunAsUser:\n  type: MustRunAsRange\nusers: []\nallowHostDirVolumePlugin: false\nallowHostIPC: false\nseLinuxContext:\n  type: MustRunAs\nreadOnlyRootFilesystem: false\nfsGroup:\n  type: MustRunAs\ngroups: []\ndefaultAddCapabilities: null\nsupplementalGroups:\n  type: RunAsAny\nvolumes:\n  - configMap\n  - downwardAPI\n  - emptyDir\n  - persistentVolumeClaim\n  - projected\n  - secret\nallowHostPID: false\nallowHostNetwork: false\nallowPrivilegeEscalation: true\nallowedCapabilities: null\n```\nIf you wish to deploy the Operator controller under the custom SCC enforcement, then the SCC must be bound to the namespace before installing the Operator. Copy the above SCC into a file to apply it to your cluster.\n```\n# Save the yaml definition from the README to panamax-scc.yaml\n$ oc login # login as cluster admin \n$ oc apply -f panamax-scc.yaml\n$ oc create clusterrole panamax-scc-binding-cluster-role --verb=\"use\" --resource=\"securityContextConstraints\" --resource-name=\"panamaxSCC\"\n$ oc create rolebinding panamax-scc-binding-namespace-role-binding --clusterrole=\"panamax-scc-binding-cluster-role\" --group=\"system:serviceaccounts:<namespace for panamax deployment>\" \n```\nFor more information about the OpenShift Container Platform Security Context Constraints, see [Managing Security Context Constraints](https://docs.openshift.com/container-platform/4.3/authentication/managing-security-context-constraints.html).\n## Limitations\n* Deployment limits - can you deploy more than once, can you deploy into different namespace\n* List specific limitations such as platforms, security, replica's, scaling, upgrades etc.. - noteworthy limits identified\n* List deployment limitations such as : restrictions on deploying more than once or into custom namespaces.\n* Not intended to provide chart nuances, but more a state of what is supported and not - key items in simple bullet form.\n* Does it work on ROKS? Openshift Container Platform?\n## Documentation\n* Can have as many supporting links as necessary for this specific workload however don't overload the consumer with unnecessary information.\n* Can be links to special procedures in the knowledge center.\n"
+  displayName: Panamax Reference Sample
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments:
+      - name: ibm-sample-panamax-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: sample-panamax-operator
+              app.kubernetes.io/managed-by: panamax-operator
+              app.kubernetes.io/name: panamax-operator
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                productID: bf6f9ad69412c4a0cba6b35cade684dc
+                productMetric: FREE
+                productName: Panamax Reference Operator
+                productVersion: 0.0.2
+              creationTimestamp: null
+              labels:
+                app.kubernetes.io/instance: sample-panamax-operator
+                app.kubernetes.io/managed-by: panamax-operator
+                app.kubernetes.io/name: panamax-operator
+                control-plane: controller-manager
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: beta.kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - ppc64le
+                        - s390x
+                    weight: 3
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: beta.kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - ppc64le
+                        - s390x
+              containers:
+              - args:
+                - --enable-leader-election
+                command:
+                - /manager
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: MY_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: WEBHOOK_ENABLED
+                  value: "true"
+                - name: OLM_DEPLOY
+                  value: "true"
+                - name: RELATED_IMAGE_PANAMAX
+                  value: cp.icr.io/cp/ibm-panamax-nginx@sha256:8223ffae31b299220a3f7ff21c7afde6478cdfb0bf4d1886525a4e1105341741
+                image: icr.io/cpopen/ibm-sample-panamax-operator@sha256:e88648efffa1ed5e7c4873bf925d25023c926e77ae9dd5152fcbb2c8d00399bd
+                imagePullPolicy: Always
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                resources:
+                  limits:
+                    cpu: 100m
+                    memory: 30Mi
+                  requests:
+                    cpu: 100m
+                    memory: 20Mi
+                securityContext:
+                  allowPrivilegeEscalation: true
+                  capabilities:
+                    drop:
+                    - ALL
+                  privileged: false
+                  readOnlyRootFilesystem: false
+              serviceAccount: ibm-sample-panamax-operator
+              serviceAccountName: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps/status
+          verbs:
+          - get
+          - update
+          - patch
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - create
+          - get
+          - list
+          - update
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps/status
+          verbs:
+          - get
+          - update
+          - patch
+        - apiGroups:
+          - ""
+          resources:
+          - endpoints
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - serviceaccounts
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - services
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - services/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - replicasets
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxconfigs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxconfigs/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxconfigs/status
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxes
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxes/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sample.ibm.com
+          resources:
+          - panamaxes/status
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - sample
+  links:
+  - name: Ibm Sample Panamax Operator
+    url: https://ibm-sample-panamax-operator.domain
+  maturity: alpha
+  provider:
+    name: content team
+  relatedImages:
+  - image: cp.icr.io/cp/ibm-panamax-nginx@sha256:8223ffae31b299220a3f7ff21c7afde6478cdfb0bf4d1886525a4e1105341741
+    name: RELATED_IMAGE_PANAMAX
+    tag: "1.20"
+  - image: cp.icr.io/cp/ibm-panamax-nginx@sha256:897366819e845b043d711859c0eb3e8d38377886caa6e578c974ca3136b23dd9
+    name: RELATED_IMAGE_PANAMAX_AMD64
+    tag: 1.20-amd64
+  - image: cp.icr.io/cp/ibm-panamax-nginx@sha256:f336329df674128bb16dbe7a1d396960077331a33a88c7dd28e477724cb760f7
+    name: RELATED_IMAGE_PANAMAX_PPC64LE
+    tag: 1.20-ppc64le
+  - image: cp.icr.io/cp/ibm-panamax-nginx@sha256:c5be83b76a179cc5d1f0f9d6cd98177c7268653021b9e45700d96c21b1500211
+    name: RELATED_IMAGE_PANAMAX_S390X
+    tag: 1.20-s390x
+  version: 4.1.0
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1beta1
+    containerPort: 9443
+    deploymentName: ibm-sample-panamax-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vpanamax.kb.io
+    rules:
+    - apiGroups:
+      - sample.ibm.com
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - panamaxes
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-sample-ibm-com-v1beta1-panamax
+  - admissionReviewVersions:
+    - v1beta1
+    containerPort: 9443
+    deploymentName: ibm-sample-panamax-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mpanamax.kb.io
+    rules:
+    - apiGroups:
+      - sample.ibm.com
+      apiVersions:
+      - v1beta1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - panamaxes
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-sample-ibm-com-v1beta1-panamax

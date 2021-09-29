@@ -1,0 +1,1 @@
+../../submodules/operator-build-scripts/buildMultiarchImage.sh

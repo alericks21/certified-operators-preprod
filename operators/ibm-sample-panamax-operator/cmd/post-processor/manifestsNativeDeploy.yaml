@@ -1,0 +1,653 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+    control-plane: controller-manager
+  name: ibm-sample-panamax-operator-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: panamaxconfigs.sample.ibm.com
+spec:
+  group: sample.ibm.com
+  names:
+    kind: PanamaxConfig
+    listKind: PanamaxConfigList
+    plural: panamaxconfigs
+    singular: panamaxconfig
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: PanamaxConfig is the Schema for the panamaxconfigs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PanamaxConfigSpec defines the desired state of PanamaxConfig
+            properties:
+              supportedOperandChannels:
+                items:
+                  type: string
+                type: array
+              supportedOperandVersions:
+                items:
+                  type: string
+                type: array
+            type: object
+          status:
+            description: PanamaxConfigStatus defines the observed state of PanamaxConfig
+            properties:
+              lastUpdate:
+                type: string
+            required:
+            - lastUpdate
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: panamaxes.sample.ibm.com
+spec:
+  group: sample.ibm.com
+  names:
+    kind: Panamax
+    listKind: PanamaxList
+    plural: panamaxes
+    singular: panamax
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: Panamax is the Schema for the nginxes API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PanamaxSpec defines the desired state of Panamax
+            properties:
+              license:
+                properties:
+                  accept:
+                    enum:
+                    - true
+                    type: boolean
+                  keyFrom:
+                    properties:
+                      secretKeyRef:
+                        properties:
+                          name:
+                            type: string
+                        type: object
+                    type: object
+                  license:
+                    type: string
+                  measure:
+                    type: string
+                  use:
+                    type: string
+                required:
+                - accept
+                type: object
+              systemStatus:
+                type: string
+              version:
+                type: string
+            type: object
+          status:
+            description: PanamaxStatus defines the observed state of Panamax
+            properties:
+              conditions:
+                items:
+                  properties:
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              name:
+                type: string
+              versions:
+                properties:
+                  available:
+                    properties:
+                      channels:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      versions:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                    type: object
+                  reconciled:
+                    type: string
+                required:
+                - reconciled
+                type: object
+            required:
+            - name
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+  namespace: ibm-sample-panamax-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-leader-election-role
+  namespace: ibm-sample-panamax-operator-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-manager-role
+  namespace: ibm-sample-panamax-operator-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - operator.ibm.com
+  resources:
+  - operandrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxconfigs/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxconfigs/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxes/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sample.ibm.com
+  resources:
+  - panamaxes/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-leader-election-rolebinding
+  namespace: ibm-sample-panamax-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ibm-sample-panamax-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+  namespace: ibm-sample-panamax-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-manager-rolebinding
+  namespace: ibm-sample-panamax-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ibm-sample-panamax-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+  namespace: ibm-sample-panamax-operator-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+    control-plane: controller-manager
+  name: ibm-sample-panamax-operator-controller-manager
+  namespace: ibm-sample-panamax-operator-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: sample-panamax-operator
+      app.kubernetes.io/managed-by: panamax-operator
+      app.kubernetes.io/name: panamax-operator
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        productID: bf6f9ad69412c4a0cba6b35cade684dc
+        productMetric: FREE
+        productName: Panamax Reference Operator
+        productVersion: 0.0.2
+      labels:
+        app.kubernetes.io/instance: sample-panamax-operator
+        app.kubernetes.io/managed-by: panamax-operator
+        app.kubernetes.io/name: panamax-operator
+        control-plane: controller-manager
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
+            weight: 3
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
+      containers:
+      - args:
+        - --enable-leader-election
+        command:
+        - /manager
+        env:
+        - name: WATCH_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: WEBHOOK_ENABLED
+          value: "false"
+        - name: OLM_DEPLOY
+          value: "false"
+        - name: RELATED_IMAGE_PANAMAX
+          value: cp.icr.io/cp/ibm-panamax-nginx@sha256:8223ffae31b299220a3f7ff21c7afde6478cdfb0bf4d1886525a4e1105341741
+        image: icr.io/cpopen/ibm-sample-panamax-operator@sha256:e88648efffa1ed5e7c4873bf925d25023c926e77ae9dd5152fcbb2c8d00399bd
+        imagePullPolicy: Always
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccount: ibm-sample-panamax-operator
+      serviceAccountName: ibm-sample-panamax-operator-ibm-sample-panamax-operator
+      terminationGracePeriodSeconds: 10

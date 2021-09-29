@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator    
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/instance: sample-panamax-operator
+      app.kubernetes.io/managed-by: panamax-operator
+      app.kubernetes.io/name: panamax-operator      
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+        app.kubernetes.io/instance: sample-panamax-operator
+        app.kubernetes.io/managed-by: panamax-operator
+        app.kubernetes.io/name: panamax-operator        
+      annotations:
+        productName: "Panamax Reference Operator"
+        productID: "bf6f9ad69412c4a0cba6b35cade684dc"
+        productVersion: "0.0.2"
+        productMetric: "FREE"        
+    spec:
+      affinity:        
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 3
+            preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+                - s390x
+      serviceAccount: ibm-sample-panamax-operator
+      serviceAccountName: ibm-sample-panamax-operator                 
+      containers:
+      - securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: false
+          #runAsNonRoot: true
+        command:
+        - /manager
+        args:
+        - --enable-leader-election
+        image: controller:latest
+        imagePullPolicy: Always        
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+        env:
+          - name: WATCH_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace 
+          - name: MY_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace                 
+          - name: WEBHOOK_ENABLED
+            value: "false"
+          - name: OLM_DEPLOY
+            value: "false"            
+          - name: RELATED_IMAGE_PANAMAX
+            value: cp.icr.io/cp/ibm-panamax-nginx@sha256:de4bf2ffa71e255bfd4ec9a237f6c95cd894fa82d315840dca65d98a6de9cd30                                  
+      terminationGracePeriodSeconds: 10
+      #securityContext:
+      #  runAsNonRoot: true
+      #  runAsUser: 1001
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false      
+
+      

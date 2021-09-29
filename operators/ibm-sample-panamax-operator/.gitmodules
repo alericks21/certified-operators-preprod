@@ -1,0 +1,4 @@
+[submodule "submodules/operator-build-scripts"]
+	path = submodules/operator-build-scripts
+	url = git@github.ibm.com:CloudPakOpenContent/operator-build-scripts.git
+	branch = master

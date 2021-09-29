@@ -1,0 +1,58 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "/Users/huizenga/go/src/github.ibm.com/CloudPakOpenContent/ibm-sample-panamax-operator/main.go",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Launch post-processor fixBundle",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["fixBundle","-c","ibm-sample-panamax-operator.clusterserviceversion.yaml","-r","relatedImages.csv","-d","sample.ibm.com_panamaxes.yaml"]
+        },        
+        {
+            "name": "Launch post-processor fixDeploy",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["fixDeploy","-n","manifestsNativeDeploy.yaml"]
+        },          
+        {
+            "name": "Launch grpc",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["-p","ibm-common-service-operator","-i","icr.io/cpopen/ibm-common-service-catalog:latest"]
+        },        
+        {
+            "name": "Launch crd processor",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["-f","sample.ibm.com_panamaxes.yaml"]
+        },        
+        {
+            "name": "Launch native",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {}
+        }
+    ]
+}

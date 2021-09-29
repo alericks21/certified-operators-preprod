@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+  name: ibm-sample-panamax-operator-webhook-service
+spec:
+  ports:
+  - port: 9443
+    targetPort: 9443
+  selector:
+    app.kubernetes.io/instance: sample-panamax-operator
+    app.kubernetes.io/managed-by: panamax-operator
+    app.kubernetes.io/name: panamax-operator
+    control-plane: controller-manager
+status:
+  loadBalancer: {}
