@@ -1,0 +1,122 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ name }}-kernel-cleanup-cron
+  labels: 
+    function: {{ name }}-kernel-cleanup-cron
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+  annotations:
+{% if metering  %} 
+    {{ metering | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  schedule: "{{ kernel_cleanup_cron.schedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 0
+  jobTemplate:
+    metadata:
+{% if owner_reference is defined %}
+      ownerReferences:
+        {{ owner_reference | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+{% if owner_reference is defined %}
+          ownerReferences:
+            {{ owner_reference | to_nice_yaml | indent(12) }}
+{% endif %}
+          annotations:
+{% if metering  %} 
+            {{ metering | to_nice_yaml| indent(12) }}
+{% endif %}
+          labels: 
+            function: {{ name }}-kernel-cleanup-cron
+{% if cpdLabels  %} 
+            {{ cpdLabels | to_nice_yaml| indent(12) }}
+{% endif %}
+        spec:
+            securityContext:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                          - {{ global.architecture }}
+            hostNetwork: false
+            hostPID: false
+            hostIPC: false
+            containers:
+            - name: {{ name }}-kernel-cleanup-cron
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.cleanup_cron %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.cleanup_cron is defined %}
+{% set image_prefix = pull_prefix.cleanup_cron %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+              image: "{{ image_prefix }}/{{ images.cleanup_cron }}{{ image_separator }}{{ image_suffix }}"
+              imagePullPolicy: {{ micro_service.pull_policy }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL 
+                runAsNonRoot: true
+                privileged: false
+                readOnlyRootFilesystem: false
+              resources:
+                requests:
+                  cpu: {{ cleanup_cron.requests.cpu }}
+                  memory: {{ cleanup_cron.requests.memory }}
+                limits:
+                  cpu: {{ cleanup_cron.limits.cpu }}
+                  memory: {{ cleanup_cron.limits.memory }}
+              command: ["/bin/sh", "-c"]
+              args : ["python {{ cleanup_cron.script_path }}/purge_idle_failed_kernel.py {{ micro_service.scheme }}://{{ name }}-control-plane:{{ micro_service.port }}/{{ instance_manager_service.path }} {{ micro_service.scheme }}://{{ name }}-control-plane:{{ micro_service.port }}/{{ instance_manager_service_v3.path }} {{ icp4d.nginx_url }}/{{ kernel_service.path }} {{ micro_service.scheme }}://{{ name }}-control-plane:{{ micro_service.port }}/{{ kernel_service.context_root }} {{ cleanup_cron.config_path }}/idleshutdown.config"]
+              volumeMounts:
+              - name: "{{ name }}-cleanup-configs"
+                mountPath: "{{ cleanup_cron.config_path }}"
+              - name: "{{ name }}-cleanup-scripts"
+                mountPath: "{{ cleanup_cron.script_path }}"
+              readinessProbe:
+                exec:
+                  command:
+                  - ls
+                  - {{ cleanup_cron.script_path }}/purge_idle_failed_kernel.py
+                initialDelaySeconds: {{ readiness_probe.initial_delay_seconds }}
+                periodSeconds: {{ readiness_probe.period_seconds }}
+                failureThreshold: {{ readiness_probe.failure_threshold }}
+                timeoutSeconds: {{ readiness_probe.timeout_seconds }}
+              livenessProbe:
+                exec:
+                  command:
+                  - ls
+                  - {{ cleanup_cron.script_path }}/purge_idle_failed_kernel.py
+                initialDelaySeconds: {{ liveness_probe.initial_delay_seconds }}
+                periodSeconds: {{ liveness_probe.period_seconds }}
+                failureThreshold: {{ liveness_probe.failure_threshold }}
+                timeoutSeconds: {{ liveness_probe.timeout_seconds }}
+            restartPolicy: "Never"
+            serviceAccount: {{ sa.viewer }}
+            serviceAccountName: {{ sa.viewer }}
+            volumes:
+            - name: "{{ name }}-cleanup-configs"
+              configMap:
+                name: "{{ name }}-cleanup-configs"
+            - name: "{{ name }}-cleanup-scripts"
+              configMap:
+                name: "{{ name }}-cleanup-scripts"

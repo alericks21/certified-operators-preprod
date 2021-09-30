@@ -1,0 +1,23 @@
+{% if (deployer_agent.hb_config_enabled is defined) %}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ name }}-{{ deployer_agent.name }}-config"
+  labels:
+    function: "{{ name }}-{{ deployer_agent.name }}"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+data:
+  config.yaml: |-
+   release:
+     namespace: {{ namespace | quote }}
+   app:
+     kube_config_path: "/tmp/kube_configs"
+     chart_path: "/tmp/helm_charts"
+     scheme: {{ deployer_agent.scheme | quote }}
+     port: {{ deployer_agent.target_port | quote }}
+     helm_driver: "secret"
+     cert_path: "/certs/microserviceCertificates.pem"
+     private_key_path: "/certs/microserviceKeys.pem"
+{% endif %}

@@ -1,0 +1,9 @@
+- block:
+  - name: set default scale size
+    set_fact: 
+      size: "{{ scaleConfig | default('small') }}"
+    when: size is not defined
+ 
+ # - name: Loading scaling defaults
+ #   include_vars: 
+ #     file: "{{ version }}/scale-config/{{ size }}.yaml"

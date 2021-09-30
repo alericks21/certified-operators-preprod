@@ -1,0 +1,2 @@
+replicas: 3
+deployer_agent_replicas: 3

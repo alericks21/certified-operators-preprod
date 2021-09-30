@@ -1,0 +1,19 @@
+#
+# Global override values
+#
+# Important Note: If you need to override one or more values
+# in a group, the whole group needs to be placed below;
+# otherwise, skipped values will not be defined. Group
+# variables into smaller sets of variables to simplify
+# maintenance of overrides
+#
+namespace: <namespace>
+
+storageClass: <storage class name>
+zenCoreMetaDbStorageClass: <storage class name>  # optional, use only if different from the storageClass
+
+pullPrefix: <pull prefix>
+
+# Docker registry info
+dockerRegistryUser: <user name>
+dockerRegistryPass: <user password>

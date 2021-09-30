@@ -1,8 +1,0 @@
-resources:
-- manager.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: controller
-  newName: cp.stg.icr.io/cp/ibm-sample-panamax-operator
-  newTag: 4.1.0-20210728.105438

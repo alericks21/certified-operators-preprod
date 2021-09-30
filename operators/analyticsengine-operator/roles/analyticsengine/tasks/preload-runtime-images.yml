@@ -1,0 +1,27 @@
+- name: Get {{ name }} preload image job status
+  k8s_info:
+    kind: Job
+    name: "{{ name }}-init-preload-jkg-image"
+    namespace: "{{ namespace }}"
+  register: job_info
+
+- name: Remove old existing {{ name }} preload image job
+  k8s:
+    state: absent
+    namespace: "{{ namespace }}"
+    definition: "{{ lookup('template', 'preload-images-jobs.yaml.j2') | from_yaml }}"
+    delete_options:
+      propagationPolicy: "Background"
+  when: job_info.resources | length != 0
+  
+- name: Create {{ name }} preload image job
+  k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition: "{{ lookup('template', 'preload-images-jobs.yaml.j2') | from_yaml }}"
+
+- name: Create {{ name }} preload image cronjob
+  k8s:
+    state: present
+    namespace: "{{ namespace }}"
+    definition: "{{ lookup('template', 'preload-images-cronjobs.yaml.j2') | from_yaml }}"

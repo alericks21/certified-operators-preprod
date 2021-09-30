@@ -1,5 +1,0 @@
-## Append samples you want in your CSV to this file as resources ##
-resources:
-- sample_v1beta1_panamax.yaml
-- sample_v1beta1_panamaxconfig.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples

@@ -1,0 +1,59 @@
+-  name: Get the {{ name }} job cleanup cron  details
+   k8s_info:
+      api_version: batch/v1beta1
+      kind: CronJob
+      name: '{{ name }}-job-cleanup-cron'
+      namespace: '{{ namespace }}'
+   register: job_cleanup_cron_info
+   when: is_35_upgrade
+-  name: Get the {{ name }} kernel cleanup cron details
+   k8s_info:
+      api_version: batch/v1beta1
+      kind: CronJob
+      name: '{{ name }}-kernel-cleanup-cron'
+      namespace: '{{ namespace }}'
+   register: kernel_cleanup_cron_info
+   when: is_35_upgrade
+-  name: Get the {{ name }} terminating pod cleanup cron details
+   k8s_info:
+      api_version: batch/v1beta1
+      kind: CronJob
+      name: '{{ name }}-terminating-pod-cleanup-cron'
+      namespace: '{{ namespace }}'
+   register: terminating_pod_cleanup_cron_info
+   when: is_35_upgrade
+-  name: Remove 3.5 {{ name }} cleanup cronjobs
+   k8s:
+      state: absent
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+      delete_options:
+         propagationPolicy: Background
+   loop:
+   -  name: kernel-cleanup-cron.yaml.j2
+   -  name: job-cleanup-cron.yaml.j2
+   -  name: terminating-pod-cleanup-cron.yaml.j2
+   when: is_35_upgrade and ( ( job_cleanup_cron_info.resources[0].metadata.labels.release is defined and  job_cleanup_cron_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" ) or ( kernel_cleanup_cron_info.resources[0].metadata.labels.release is defined and kernel_cleanup_cron_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" ) or ( terminating_pod_cleanup_cron_info.resources[0].metadata.labels.release is defined and terminating_pod_cleanup_cron_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" ) )
+      
+-  name: Create configmaps for {{ name }} cleanup cronjobs
+   k8s:
+      state: present
+      namespace: '{{ namespace }}'
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+   loop:
+   -  name: cleanup-cron-configmap.yaml.j2
+   -  name: cleanup-cron-scripts-configmap.yaml.j2
+-  name: Create {{ name }} cleanup cronjobs
+   k8s:
+      state: present
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+   loop:
+   -  name: kernel-cleanup-cron.yaml.j2
+   -  name: job-cleanup-cron.yaml.j2
+   -  name: terminating-pod-cleanup-cron.yaml.j2

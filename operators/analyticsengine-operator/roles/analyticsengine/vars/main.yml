@@ -1,0 +1,27 @@
+---
+# vars file for analyticsengine
+addon_version: 4.0.1
+
+cpdLabels:
+  release: 'ibm-analyticsengine-prod'
+  app: analyticsengine
+  component: analyticsengine
+  app.kubernetes.io/name: 'analyticsengine'
+  app.kubernetes.io/managed-by: 'analyticsengine'
+  app.kubernetes.io/instance: 'ibm-analyticsengine-prod'
+  app.kubernetes.io/component: analyticsengine
+  icpdsupport/addOnId: "{{ global.add_on_id }}"
+  icpdsupport/app: "api"
+
+metering: 
+  productName: "Analytics Engine powered by Apache Spark"
+  productID: "eb9998dcc5d24e3eb5b6fb488f750fe2"
+  productVersion: "{{ addon_version }}"
+  productCloudpakRatio: "1:1"
+  productMetric: "VIRTUAL_PROCESSOR_CORE"
+  productChargedContainers: All
+  cloudpakId: "eb9998dcc5d24e3eb5b6fb488f750fe2"
+  cloudpakName: "IBM Cloud Pak for Data"
+  cloudpakInstanceId: "{{ cloudpak_instance_id }}"
+  hook.deactivate.cpd.ibm.com/command: "[]"
+  hook.activate.cpd.ibm.com/command: "[]"

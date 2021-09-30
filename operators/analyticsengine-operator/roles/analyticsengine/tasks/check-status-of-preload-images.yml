@@ -1,0 +1,18 @@
+- name: Wait until the {{ name }} preload image job is comepleted
+  k8s_info:
+    kind: Job
+    name: "{{ name }}-init-preload-jkg-image"
+    namespace: "{{ namespace }}"
+  register: job_info
+  retries: 60
+  delay: 60
+  until: job_info.resources[0].status.conditions is defined and job_info.resources[0].status.conditions[0].type is defined and ( job_info.resources[0].status.conditions[0].type.find("Completed") != 1 )
+  
+- name: Remove completed {{ name }} preload image job
+  k8s:
+    state: absent
+    namespace: "{{ namespace }}"
+    definition: "{{ lookup('template', 'preload-images-jobs.yaml.j2') | from_yaml }}"
+    delete_options:
+      propagationPolicy: "Background"
+  when: job_info.resources | length != 0

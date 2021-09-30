@@ -1,0 +1,20 @@
+build_number: BUILD_NUMBER
+image_digests:
+  db_spec: "sha256:c69718cd440a4e4f9cc9c5a4eaf98335330c5c921195429ecd9c2644625e44e7"
+  spark_runtime_v24: "sha256:800951e2a8b462f0f7698473b5cd6ec06a11fe0372592fd893ad6d4f0f91054f"
+  spark_runtime_v30: "sha256:ccfd1032f0f72f985ba0f5983ec62a1fd753b536b8d22f5a892e38b4c046df2b"
+  nginx: "sha256:b7cad4a651bdeb73dcee7a8c02844a41e14f9dc8776526f248e8fc46d5639d0f"
+  trust_store: "sha256:2143fe5d437dececc741b5368e1a5c439ea18e09961837dbfefe85a224e03afc"
+  deployer_agent: "sha256:6de061842a1a5471d453a518ad10adf0b1fc51e367e222d8c331ce1589cfaa88"
+  control_plane: "sha256:597bda29cf08f048ce5b5e562d323be7a86ab71553619888f606487072a069dc"
+  helm_repo: "sha256:bc9f3e6723848652f6ebc9844df5be12a49159c569da1828de947e07aa18ff3e"
+  #python image is used for dataplane_reg and cleanup_cron
+  dataplane_reg: "sha256:bb61b6bcbd2fa1e8c092e0be31d27ba612106061e379087a76ef16a9e3bbeb3e"
+  cleanup_cron: "sha256:bb61b6bcbd2fa1e8c092e0be31d27ba612106061e379087a76ef16a9e3bbeb3e"
+  syslog: "sha256:ce626b315d68b522dd979146f5597a37cb153c3d610283ebfbe7d0551783ab0e"
+
+
+#image_tags:
+#  tag: "4.0.0002-amd64"
+#  tag24: "2.4.7.v21-amd64"
+#  tag30: "3.0.2.v3-amd64"

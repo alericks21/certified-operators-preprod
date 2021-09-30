@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  name: "{{ name }}-{{ deployer_agent.name }}"
+  labels:
+    function: "{{ name }}-{{ deployer_agent.name }}"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+spec: 
+  selector:
+    function: "{{ name }}-{{ deployer_agent.name }}"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+  ports: 
+  - port: {{ deployer_agent.port }}
+    protocol: TCP
+    targetPort: {{ deployer_agent.target_port }}

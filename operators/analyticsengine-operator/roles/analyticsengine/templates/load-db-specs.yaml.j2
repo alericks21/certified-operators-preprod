@@ -1,0 +1,111 @@
+# This is a YAML-formatted file.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ name }}-load-db-specs"
+  annotations:
+{% if metering  %} 
+    {{ metering | to_nice_yaml| indent(4) }}
+{% endif %}
+  labels:
+    function: "{{ name }}-load-db-specs"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  template:
+    metadata:
+{% if owner_reference is defined %}
+      ownerReferences:
+        {{ owner_reference | to_nice_yaml | indent(8) }}
+{% endif %}
+      annotations:
+{% if metering  %} 
+        {{ metering | to_nice_yaml| indent(8) }}
+{% endif %}
+      labels:
+        function: "{{ name }}-load-db-specs"
+{% if cpdLabels  %} 
+        {{ cpdLabels | to_nice_yaml| indent(8) }}
+{% endif %}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - {{ global.architecture }}
+      restartPolicy: "OnFailure"
+      serviceAccount: {{ sa.viewer }}
+      serviceAccountName: {{ sa.viewer }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      containers:
+      - name: "{{ name }}-load-db-specs"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          privileged: false
+          readOnlyRootFilesystem: false
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.db_spec %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.db_spec is defined %}
+{% set image_prefix = pull_prefix.db_spec %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+        image: "{{ image_prefix }}/{{ images.db_spec }}{{ image_separator }}{{ image_suffix }}"
+        imagePullPolicy: {{ micro_service.pull_policy }}
+        resources:
+          requests:
+            cpu: {{ db_spec.requests.cpu }}
+            memory: {{ db_spec.requests.memory }}
+          limits:
+            cpu: {{ db_spec.limits.cpu }}
+            memory: {{ db_spec.limits.memory }}
+        env:
+          - name: DB_URL
+            value: "postgresql://{{ spark_metastoredb.database_user }}@{{ spark_metastoredb.database_host }}:{{ spark_metastoredb.database_port }}/{{ spark_metastoredb.database_name }}?sslmode={{ spark_metastoredb.database_ssl_mode }}&sslrootcert={{ spark_metastoredb.certs_path }}/{{ spark_metastoredb.database_root_cert }}&sslcert={{ spark_metastoredb.certs_path }}/{{ spark_metastoredb.database_client_cert }}&sslkey={{ spark_metastoredb.certs_path }}/{{ spark_metastoredb.database_client_key }}"
+        command: ["/bin/bash", "-c"]
+        args:
+          - "bash {{ db_spec.script_path }}load-db-specs.sh {{ db_spec.script_path }} {{ image_prefix }}/{{ images.db_spec }} {{ db.version }} {{ micro_service.zen_metastore_certs }} {{ micro_service.temp_zen_metastore_certs }}"
+        volumeMounts:
+        - name: "{{ name }}-load-db-specs-script"
+          mountPath: "{{ db_spec.script_path }}"
+{% if spark_metastoredb.cockroachdb is defined %}
+        - name: "{{ trust_store.zen_metastore_certs_secret_name }}"
+          mountPath: "{{ micro_service.temp_zen_metastore_certs }}"
+{% else %}
+        - name: {{ spark_metastoredb.postgres_secret_name }}
+          mountPath: "{{ micro_service.temp_zen_metastore_certs }}"
+{% endif %}
+      volumes:
+        - name: "{{ name }}-load-db-specs-script"
+          configMap:
+            name: "{{ name }}-load-db-specs-script"
+        - name: "{{ name }}-zen-metstore-certs"
+          secret:
+            secretName: "{{ micro_service.service_broker_token_secret }}"
+{% if spark_metastoredb.cockroachdb is defined %}
+        - name: "{{ trust_store.zen_metastore_certs_secret_name }}"
+          secret:
+            secretName: "{{ trust_store.zen_metastore_certs_secret_name }}"
+{% else %}
+        - name: {{ spark_metastoredb.postgres_secret_name }}
+          secret:
+            secretName: {{ spark_metastoredb.postgres_secret_name }}
+            defaultMode: 420
+{% endif %}

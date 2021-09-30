@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ name }}-cleanup-configs"
+  labels:
+    function: "{{ name }}-cleanup-configs"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+data:
+  idleshutdown.config: |-
+    {
+        "spark": {
+            "idleTimeBeforeShutdown": {{ service_config.idle_kernel_time_before_shutdown }} 
+        }
+    }

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ name }}-{{ nginx.name }}-external
+  labels:
+    function: "{{ name }}-{{ nginx.name }}"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  ports:
+  - name: proxy
+    port: {{ nginx.container_port }}
+    protocol: TCP
+    targetPort: {{ nginx.port }}
+  selector:
+    function: {{ name }}-{{ nginx.name }}

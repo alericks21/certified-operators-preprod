@@ -1,0 +1,11 @@
+domain: ae.cpd.ibm.com
+layout: ansible.sdk.operatorframework.io/v1
+projectName: analyticsengine-operator
+resources:
+- group: ae
+  kind: AnalyticsEngine
+  version: v1
+version: 3-alpha
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}

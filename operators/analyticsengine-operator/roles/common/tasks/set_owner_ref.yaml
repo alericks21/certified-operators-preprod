@@ -1,0 +1,13 @@
+- block:
+  - name: set owner reference
+    set_fact:
+      owner_reference:
+      - apiVersion: "{{ _ae_cpd_ibm_com_analyticsengine.apiVersion }}"
+        kind: "{{ _ae_cpd_ibm_com_analyticsengine.kind }}"
+        name: "{{ ansible_operator_meta.name }}"
+        uid: "{{ _ae_cpd_ibm_com_analyticsengine.metadata.uid }}"
+    when: _ae_cpd_ibm_com_analyticsengine is defined    
+
+  - debug:
+      msg: "owner_reference: {{ owner_reference }}"  
+    when: owner_reference is defined

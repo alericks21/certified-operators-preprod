@@ -1,0 +1,108 @@
+---
+dist: xenial
+sudo: required
+group: bluezone
+language: generic
+
+services:
+  - docker
+# Environment variables (setup endpoint to IBM github)
+env:
+  global:
+  - OCTOKIT_API_ENDPOINT="https://github.ibm.com/api/v3/"
+
+before_install:
+  # Install jq and yq
+  - sudo apt-get -y install jq
+  - sudo apt-get -y -qq install sshpass
+  - for pip in pip pip3 ; do
+      which $pip || echo "which $pip command failed." ;
+      $(which $pip) -V || echo "$(which $pip) -V command failed." ;
+    done
+  # - pip3 install yq
+  ##Introduction\n IBM® Cloud Pak for Data is a cloud-native solution that enables you\nto put your data to work quickly and efficiently. It enables all of your data\nusers to collaborate from a single, unified interface that supports a large number\nof services that are designed to work together. It provides a suite of services\nthat support you in your journey to AI. The Cloud Pak for Data operator helps\nyou quickly provision services that you need for immediate use. These are some of the services\navailable in Cloud Pak for Data:\n\n- Watson Studio\n- Watson Machine Learning\n- Watson Knowledge Catalog\n- Watson OpenScale\n- Data Virtualization\n- Db2 Warehouse\n- Cognos® Dashboards\n- Analytics Engine Powered by Apache Spark\n\n# Details\n\n## Prerequisites\n- Red Hat OpenShift Container Platform 4.5 or newer installed on x86_64\n- A user with cluster administrator role\n- No storage is required to install the operator but you will need storage and resources to install the Cloud Pak for Data services\n- [IBM Common Services](https://www.ibm.com/support/knowledgecenter/SSHKN6/kc_welcome_cs.html) is required to be pre-installed. \n- To install the Cloud Pak for Data control plane, review the [system\nrequirements](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/cpd/plan/rhos-reqs.html).\n- Before you install services on Cloud Pak for Data, review the [system requirements\nfor services](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/sys-reqs/services_prereqs.html).\n\n## Resources Required\nThe operator requires cpu `100m` and memory `256Mi` at a minimum. See services for the minimum resource and storage requirements for each Cloud Pak for Data service.\n\n## Installing\nFollow the OLM installation steps for this operator. Network connectivity to `docker.io` is required for online install. Follow the airgap steps to install the operator in a disconnected environment.\n\n## Configuration\nTBD \n\n## Limitations\n- Only `x86-64` platforms are supported by this operator\n- See [limitations](https://www.ibm.com/support/knowledgecenter/SSQNUZ_current/cpd/overview/known-issues.html) in Cloud Pak for Data services\n\n## SecurityContextConstraints Requirements\nThe `restricted` SCC is used for the product.\n\n## Documentation\nSee the [Cloud Pak for Data Knowledge center](https://www.ibm.com/support/knowledgecenter/SSQNUZ_current/cpd/overview/welcome.html) and [Licensing](https://ibm.biz/BdqSw4) terms\n"
+  # Clone the ibm-spark-bundle
+  # The clone command will use the ssh key from the travis settings to clone the repo from github.ibm.com
+  - git clone --recurse-submodules git@github.ibm.com:hummingbird/ibm-analyticsengine-bundle.git;
+  - export OPERATOR_BUNDLE_PATH=`pwd`/ibm-analyticsengine-bundle
+  - echo $OPERATOR_BUNDLE_PATH
+  # Clone the analyticsengine-case
+  # The clone command will use the ssh key from the travis settings to clone the repo from github.ibm.com
+  - if [[ ! -z "$CASE_BRANCH_OVERRIDE" ]] ; then
+      git clone -b $CASE_BRANCH_OVERRIDE git@github.ibm.com:PrivateCloud-analytics/cpd-case-repo.git;
+    else 
+      git clone git@github.ibm.com:PrivateCloud-analytics/cpd-case-repo.git;
+    fi
+  # enable registry mirroring for the bundle image, use the same mirror configuration as the runtimes bundle
+  - mkdir -p ~/.config/containers
+  - cp ${TRAVIS_BUILD_DIR}/build-script/registries.conf ~/.config/containers
+  - export AE_CASE_PATH=`pwd`/cpd-case-repo
+  - export OPERATOR_PATH=`pwd`
+  - echo "Install the mod casectl"
+    chmod +x ${TRAVIS_BUILD_DIR}/build-script/casectl && sudo cp ${TRAVIS_BUILD_DIR}/build-script/casectl /usr/local/bin/
+
+addons:
+  apt:
+    update: true
+    packages:
+      - jq
+      - python3-dev
+      - python3-pip
+      - python3-six
+      - python3-setuptools
+
+if: branch = master # Only build on master branch
+
+jobs:
+  include:
+#     - stage: Prepare component images to digests.yaml 
+#       script: 
+#         bash -x ${TRAVIS_BUILD_DIR}/build-script/prepare_digest_file.sh
+#       skip_cleanup: true
+#       os: linux
+#       env:
+#         - ARCH=x86_64
+#       workspaces:
+#         create:
+#           name: operator-build
+    - stage: Build Operator Image
+      script: bash -x ${TRAVIS_BUILD_DIR}/build-script/build_operator_image.sh amd64
+      skip_cleanup: true
+      os: linux
+      env:
+        - ARCH=x86_64
+      workspaces:
+        use:
+          - operator-build
+    - stage: Build Operator Image
+      script: bash -x ${TRAVIS_BUILD_DIR}/build-script/build_operator_image.sh ppc64le
+      skip_cleanup: true
+      os: linux-ppc64le
+      env:
+        - ARCH=ppc64le
+      workspaces:
+        use:
+          - operator-build
+    - stage: Build Operator Fat Manifest, Bundle, Catalogs
+      script: bash -x ${TRAVIS_BUILD_DIR}/build-script/build_bundle_catalog.sh
+      skip_cleanup: true
+      os: linux
+      env:
+        - ARCH=x86_64
+      workspaces:
+        use:
+          - operator-build
+    - stage: Prepare the case bundle zip file
+      os: linux
+      env:
+        - ARCH=x86_64
+        - GMC_PUSH=true
+      workspaces:
+        use:
+          - operator-build
+      deploy:
+        - provider: script
+          skip_cleanup: true
+          script: bash -x ${TRAVIS_BUILD_DIR}/build-script/build_case.sh
+          on:
+            branch: master

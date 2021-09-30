@@ -1,0 +1,81 @@
+-  name: Get the {{ name }} helm repo deployment details
+   k8s_info:
+      kind: Deployment
+      name: '{{ name }}-helm-repo'
+      namespace: '{{ namespace }}'
+   register: helm_deployment_info
+   when: is_35_upgrade
+-  name: Get the {{ name }} helm repo service details
+   k8s_info:
+      kind: Service
+      name: '{{ name }}-helm-repo-headless'
+      namespace: '{{ namespace }}'
+   register: helm_service_info
+   when: is_35_upgrade
+-  name: Cleanup 3.5 helm-repo deployments and services
+   k8s:
+      state: absent
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+      delete_options:
+         propagationPolicy: Background
+   loop:
+   -  name: helm-repo-deployment.yaml.j2
+   -  name: helm-repo-service.yaml.j2
+   when: is_35_upgrade and ( helm_deployment_info.resources[0].metadata.labels.release is defined and helm_deployment_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" ) and ( helm_service_info.resources[0].metadata.labels.release is defined and helm_service_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" )
+-  name: Create resources for {{ name }} deployer agent & helm repo
+   k8s:
+      state: present
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+   loop:
+   -  name: deployer-agent-config.yaml.j2
+   -  name: deployer-agent-env-config.yaml.j2
+   -  name: helm-repo-deployment.yaml.j2
+   -  name: helm-repo-service.yaml.j2
+   -  name: deployer-agent-deployment.yaml.j2
+   -  name: deployer-agent-service.yaml.j2
+-  name: Get the {{ name }} control-plane deployment details
+   k8s_info:
+      kind: Deployment
+      name: '{{ name }}-control-plane'
+      namespace: '{{ namespace }}'
+   register: control_plane_deployment_info
+   when: is_35_upgrade
+-  name: Get the {{ name }} control-plane service details
+   k8s_info:
+      kind: Service
+      name: '{{ name }}-control-plane'
+      namespace: '{{ namespace }}'
+   register: control_plane_service_info
+   when: is_35_upgrade
+-  name: Cleanup 3.5 control-plane deployments and services
+   k8s:
+      state: absent
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+      delete_options:
+         propagationPolicy: Background
+   loop:
+   -  name: controlplane-deployment.yaml.j2
+   -  name: controlplane-service.yaml.j2
+   when: is_35_upgrade and ( control_plane_deployment_info.resources[0].metadata.labels.release is defined and control_plane_deployment_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" ) and ( control_plane_service_info.resources[0].metadata.labels.release is defined and control_plane_service_info.resources[0].metadata.labels.release
+      == "ibm-spark-prod" )
+-  name: Create resources for {{ name }} control plane
+   k8s:
+      state: present
+      namespace: '{{ namespace }}'
+      apply: yes
+      definition: '{{ lookup(''template'', item.name) | from_yaml }}'
+   loop:
+   -  name: controlplane-configmap.yaml.j2
+   -  name: resource-limit-configmap.yaml.j2
+   -  name: syslog-configmap.yaml.j2
+   -  name: controlplane-deployment.yaml.j2
+   -  name: controlplane-service.yaml.j2

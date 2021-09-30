@@ -1,0 +1,12 @@
+---
+# Use the 'create api' subcommand to add watches to this file.
+- version: v1
+  group: ae.cpd.ibm.com
+  kind: AnalyticsEngine
+  playbook: install.yml
+  snakeCaseParameters: False
+  watchDependentResources: False
+#   finalizer:
+#     name: ae.cpd.ibm.com/finalizer
+#     playbook: playbooks/uninstall.yml
+# +kubebuilder:scaffold:watch

@@ -1,0 +1,13 @@
+{% if (deployer_agent.hb_env_config_enabled is defined) %}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ name }}-{{ deployer_agent.name }}-env-config"
+  labels:
+    function: "{{ name }}-{{ deployer_agent.name }}"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+data:
+   CONFIG_PATH: "{{ deployer_agent.config_path }}/config.yaml"
+{% endif %}

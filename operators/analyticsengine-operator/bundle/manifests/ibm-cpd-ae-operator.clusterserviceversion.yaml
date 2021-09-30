@@ -1,0 +1,675 @@
+apiVersion: operators.coreos.com/v1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    olm.skipRange: '>=1.0.0 <1.0.1'
+    alm-examples: |-
+      [
+         {
+           "apiVersion": "ae.cpd.ibm.com/v1",
+           "kind": "AnalyticsEngine",
+           "metadata": {
+             "name": "analyticsengine-sample",
+             "labels": {
+               "app.kubernetes.io/instance": "ibm-cpd-ae-operator",
+               "app.kubernetes.io/managed-by": "ibm-cpd-ae-operator",
+               "app.kubernetes.io/name": "ibm-cpd-ae-operator",
+               "build": "BUILD_NUMBER"
+             }
+           },
+           "spec": {
+             "license": {
+               "accept": false
+             },
+             "scaleConfig": "small",
+             "serviceConfig": {
+               "sparkAdvEnabled": false,
+               "jobAutoDeleteEnabled": true,
+               "fipsEnabled": false,
+               "kernelCullTime": 30,
+               "imagePullCompletions": 20,
+               "imagePullParallelism": 40,
+               "kernelCleanupSchedule": "*/30 * * * *",
+               "jobCleanupSchedule": "*/30 * * * *"
+             },
+             "sparkRuntimeConfig": {
+               "maxDriverCpuCores": 5,
+               "maxExecutorCpuCores": 5,
+               "maxDriverMemory": "50g",
+               "maxExecutorMemory": "50g",
+               "maxNumWorkers": 50
+             },
+             "serviceInstanceConfig": {
+               "defaultCpuQuota": 20,
+               "defaultMemoryQuota": 80
+             }
+           }
+         }
+      ]
+    capabilities: Seamless Upgrades
+    description: "IBM Analytics Engine Powered by Apache Spark Service"
+    operators.operatorframework.io/builder: operator-sdk-v1.4.2
+    operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
+    containerImage: icr.io/cpopen/ibm-cpd-analyticsengine-operator:1.0.0
+  name: ibm-cpd-ae.v1.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: AnalyticsEngine
+      name: analyticsengines.ae.cpd.ibm.com
+      version: v1
+      description: 'Documentation For additional details regarding install parameters check: http://ibm.biz/-readme. License By installing this product you accept the license terms http://ibm.biz/-license.'
+      resources:
+      - kind: analyticsengine
+        name: ""
+        version: v1
+      specDescriptors:
+       - description: "You must read and accept the license terms to install the software."
+         displayName: License
+         path: license
+       - description: "Service scale configuration for control plane installation."
+         displayName: scaleConfig
+         path: scaleConfig
+         value:
+         - small
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:select:small
+         - urn:alm:descriptor:com.tectonic.ui:select:medium
+         - urn:alm:descriptor:com.tectonic.ui:select:large
+       - displayName: Maintenance Mode
+         description: Set maintenance mode to true to quiesce and backup the services.
+         path: ignoreForMaintenance
+         value:
+         - false
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+       - description: "Settings that control service level configurations."
+         displayName: serviceConfig
+         path: serviceConfig
+       - description: "Settings that control spark runtime level configurations."
+         displayName: sparkRuntimeConfig
+         path: sparkRuntimeConfig
+       - description: "Settings that control AnalyticsEngine service instance default resource quota configurations."
+         displayName: serviceInstanceConfig
+         path: serviceInstanceConfig
+       - description: "Indicate that you read and accept the license terms."
+         displayName: Accept license
+         value:
+         - false
+         path: license.accept
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+       - description: "Select the license that you purchased.\n• Select Enterprise for IBM Cloud Pak for Data Enterprise Edition (https://ibm.biz/BdffBz) \n• Select Standard for IBM Cloud Pak for Data Standard Edition (https://ibm.biz/BdffBf)\n"
+         displayName: License
+         path: license.license
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:fieldDependency:license.accept:true
+         - urn:alm:descriptor:com.tectonic.ui:select:Enterprise
+         - urn:alm:descriptor:com.tectonic.ui:select:Standard
+       - description: "This flag will enable or disable Jobs & Spaces UI capabilities of AnalyticsEngine service."
+         displayName: AnalyticsEngine Advance Features 
+         path: serviceConfig.sparkAdvEnabled
+         value:
+         - false
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+       - description: "Set it to false if you do not want to immediatly removed spark jobs once they have reached terminal states e.g FINISHED/FAILED."
+         displayName: Spark job auto delete
+         path: serviceConfig.jobAutoDeleteEnabled
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+       - description: "Set it to true if your system is FIPS enabled"
+         displayName: FIPS enabled environment
+         path: serviceConfig.fipsEnabled
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+       - description: "Set value to X minutes, if want to remove idle kernel after X minutes."
+         displayName: JEG spark kernel cull time
+         path: serviceConfig.kernelCullTime
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+       - displayName: Spark runtime image pull completions.
+         path: serviceConfig.imagePullCompletions
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+         - urn:alm:descriptor:com.tectonic.ui:advanced
+       - description: "If you have very large Openshift cluster in that case you can update imagePullCompletions & imagePullParallelism accordingly e.g. if you have 100 nodes cluster set imagePullCompletions: 100 & imagePullParallelism: 150."
+         displayName: Spark runtime image pull parallelism
+         path: serviceConfig.imagePullParallelism
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+         - urn:alm:descriptor:com.tectonic.ui:advanced
+       - displayName: Spark kernel cleanup schedule
+         path: serviceConfig.kernelCleanupSchedule
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:text
+         - urn:alm:descriptor:com.tectonic.ui:advanced
+       - description: "By default kernel & job cleanup cronjobs look for idle spark kernels/jobs and based on kernelCullTime parameter it teminates them, if you want cleanup less/more aggressively change accordingly. e.g for 1 hour * */1 * * * k8s format."
+         displayName: Spark job cleanup schedule
+         path: serviceConfig.jobCleanupSchedule
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:text
+         - urn:alm:descriptor:com.tectonic.ui:advanced
+       - description: "Spark runtime configuration to set max driver CPUs allowed for spark job."
+         displayName: Max allowed spark job driver CPU cores
+         path: sparkRuntimeConfig.maxDriverCpuCores
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+       - description: "Spark runtime configuration to set max execute CPUs allowed per executor for spark job."
+         displayName: Max allowed spark job executor CPU cores
+         path: sparkRuntimeConfig.maxExecutorCpuCores
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+       - description: "Spark runtime configuration to set max driver memory allowed for spark job."
+         displayName: Max allowed spark driver memory
+         path: sparkRuntimeConfig.maxDriverMemory
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:text
+       - description: "Spark runtime configuration to set max executor memory allowed per executor for spark job."
+         displayName: Max allowed spark executor memory
+         path: sparkRuntimeConfig.maxExecutorMemory
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:text
+       - description: "Spark runtime configuration to set max number of executors allowed per spark job"
+         displayName: Max allowed number of executors per spark job
+         path: sparkRuntimeConfig.maxNumWorkers
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+       - description: "Default CPU quota means accumulative CPU consumption of spark jobs created under an instance can be no more than set value"
+         displayName: CPU quota per AnalyticsEngine service instance
+         path: serviceInstanceConfig.defaultCpuQuota
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+       - description: "Default memory quota means accumulative memory consumption of spark jobs created under an instance can be no more than set value"
+         displayName: Memory quota per AnalyticsEngine service instance in GB
+         path: serviceInstanceConfig.defaultMemoryQuota
+         x-descriptors:
+         - urn:alm:descriptor:com.tectonic.ui:number
+      statusDescriptors:
+      - displayName: Version
+        path: versions
+      - displayName: Reconciled
+        path: versions.reconciled
+  description: |-
+    # Introduction Common Core Services Operator
+    Put stuff here
+    # Details
+    Various Details
+    ## Prerequisites
+    Various Prerequisites
+    ## Resources Required
+    Various Resources Required
+    ## Installing
+    Various Installation details
+    # Configuration
+    Various Configuration information
+    ### Limitations
+    Various Limitations
+    ### SecurityContextConstraints Requirements
+    All pods will use the restricted SCC
+  displayName: IBM Analytics Engine Powered by Apache Spark Service
+  icon:
+  - base64data: "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"
+    mediatype: image/png
+  relatedImages:
+  - image: icr.io/cpopen/ibm-cpd-analyticsengine-operator:1.0.0
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          - batch
+          - extensions
+          - apps
+          - policy
+          - rbac.authorization.k8s.io
+          - autoscaling
+          - route.openshift.io
+          - authorization.openshift.io
+          - networking.k8s.io
+          - metrics.k8s.io
+          resources:
+          - pods
+          - pods/log
+          - poddisruptionbudgets
+          - secrets
+          - jobs
+          - configmaps
+          - deployments
+          - deployments/scale
+          - statefulsets
+          - statefulsets/scale
+          - replicasets
+          - services
+          - persistentvolumeclaims
+          - cronjobs
+          - pods/exec
+          - pods/portforward
+          - serviceaccounts
+          - namespaces
+          - roles
+          - rolebindings
+          - horizontalpodautoscalers
+          - routes
+          - routes/custom-host
+          - ingresses
+          - endpoints
+          - cronjob
+          - networkpolicies
+          - events
+          - jobs/status
+          - pods/status
+          - resourcequotas
+          - resourcequotas/status
+          verbs:
+          - apply
+          - create
+          - get
+          - delete
+          - watch
+          - update
+          - edit
+          - exec
+          - list
+          - patch
+          - scale
+          - deletecollection
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - admissionregistration.k8s.io
+          resources:
+          - validatingwebhookconfigurations
+          - mutatingwebhookconfigurations
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resourceNames:
+          - ibm-cpd-ae-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - ae.cpd.ibm.com
+          resources:
+          - analyticsengine
+          - analyticsengines
+          - analyticsengine/status
+          - analyticsengines/status
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - image.openshift.io
+          resources:
+          - imagestreams
+          - imagestreams/layers
+          - imagestreams/secrets
+          - imagestreams/status
+          - imagestreamimages
+          - imagestreamimports
+          - imagestreammappings
+          - imagestreamtags
+          verbs:
+          - create
+          - delete
+          - list
+          - watch
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - build.openshift.io
+          resources:
+          - buildconfigs
+          - buildconfigs/instantiate
+          - buildconfigs/instantiatebinary
+          - buildconfigs/webhooks
+          - buildlogs
+          - builds
+          - builds/clone
+          - builds/log
+          - builds/details
+          verbs:
+          - create
+          - delete
+          - list
+          - get
+          - watch
+          - update
+          - patch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrole
+          - clusterroles
+          - clusterrolebinding
+          - clusterrolebindings
+          verbs:
+          - create
+          - delete
+          - list
+          - get
+          - watch
+          - update
+          - patch
+        - apiGroups:
+          - ae.cpd.ibm.com
+          resources:
+          - analyticsengines
+          - analyticsengines/status
+          - analyticsengines/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: ibm-cpd-ae-operator-serviceaccount
+      deployments:
+      - name: ibm-cpd-ae-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: ibm-cpd-ae-operator
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                cloudpakId: eb9998dcc5d24e3eb5b6fb488f750fe2
+                cloudpakName: Cloud Pak for Data
+                productID: eb9998dcc5d24e3eb5b6fb488f750fe2
+                productMetric: FREE
+                productName: IBM Cloud Pak for Data
+                productVersion: 4.0.1
+              labels:
+                app.kubernetes.io/instance: ibm-cpd-ae-operator
+                app.kubernetes.io/managed-by: ibm-cpd-ae-operator
+                app.kubernetes.io/name: ibm-cpd-ae-operator
+                intent: projected
+                name: ibm-cpd-ae-operator
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - ppc64le
+                    weight: 3
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - ppc64le
+              containers:
+              - args:
+                - --max-concurrent-reconciles
+                - "8"
+                env:
+                - name: ANALYTICS_ENGINE_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: namespace-scope
+                      key: namespaces
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: ibm-cpd-ae-operator
+                - name: REGISTRY_SECRET
+                  value: ibm-entitlement-key
+                - name: ENTITLED_REGISTRY_NAME
+                  value: hyc-cloud-private-integration-docker-local.artifactory.swg-devops.com
+                image: icr.io/cpopen/ibm-cpd-analyticsengine-operator:1.0.0
+                imagePullPolicy: Always
+                name: ibm-cpd-ae-operator
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 1Gi
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+                  privileged: false
+                  readOnlyRootFilesystem: false
+                  runAsNonRoot: true
+              serviceAccount: ibm-cpd-ae-operator-serviceaccount
+              serviceAccountName: ibm-cpd-ae-operator-serviceaccount
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          - batch
+          - extensions
+          - apps
+          - policy
+          - rbac.authorization.k8s.io
+          - autoscaling
+          - route.openshift.io
+          - authorization.openshift.io
+          - networking.k8s.io
+          - metrics.k8s.io
+          resources:
+          - pods
+          - pods/log
+          - poddisruptionbudgets
+          - secrets
+          - jobs
+          - configmaps
+          - deployments
+          - daemonsets
+          - statefulsets
+          - replicasets
+          - services
+          - services/finalizers
+          - persistentvolumeclaims
+          - cronjobs
+          - pods/exec
+          - pods/portforward
+          - serviceaccounts
+          - namespaces
+          - roles
+          - rolebindings
+          - horizontalpodautoscalers
+          - routes
+          - routes/custom-host
+          - ingresses
+          - endpoints
+          - cronjob
+          - networkpolicies
+          - events
+          - jobs/status
+          - pods/status
+          - resourcequotas
+          - resourcequotas/status
+          verbs:
+          - apply
+          - create
+          - get
+          - delete
+          - watch
+          - update
+          - edit
+          - exec
+          - list
+          - patch
+          - deletecollection
+        - apiGroups:
+          - cpd.ibm.com
+          resources:
+          - cpdinstalls
+          - cpdinstalls/spec
+          - cpdinstalls/status
+          verbs:
+          - apply
+          - create
+          - delete
+          - edit
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - build.openshift.io
+          resources:
+          - buildconfigs
+          - buildconfigs/instantiate
+          - buildconfigs/instantiatebinary
+          - buildconfigs/webhooks
+          - buildlogs
+          - builds
+          - builds/clone
+          - builds/details
+          - builds/log
+          verbs:
+          - create
+          - delete
+          - list
+          - watch
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - image.openshift.io
+          resources:
+          - imagestreams
+          - imagestreams/layers
+          - imagestreams/secrets
+          - imagestreams/status
+          - imagestreamimages
+          - imagestreamimports
+          - imagestreammappings
+          - imagestreamtags
+          verbs:
+          - create
+          - delete
+          - list
+          - watch
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - apps
+          resourceNames:
+          - cpd-analyticsengine-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - replicasets
+          - deployments
+          verbs:
+          - get
+        - apiGroups:
+          - ae.cpd.ibm.com
+          resources:
+          - analyticsengine
+          - analyticsengines
+          - analyticsengine/status
+          - analyticsengines/status
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - certmanager.k8s.io
+          resources:
+          - issuers
+          - issuers/status
+          - issuers/finalizers
+          - certificates
+          - certificates/status
+          - certificates/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: ibm-cpd-ae-operator-serviceaccount
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: true
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - Cloud Pak
+  - Data
+  - Analytics
+  - IBM
+  - AI
+  - analyticsengine
+  - spark
+  - apache-spark
+  - analyticsengine-powered-by-apache-spark
+  links:
+  - name: Analyticsengine Operator
+    url: https://analyticsengine-operator.domain
+  maturity: alpha
+  provider:
+    name: cpd
+  version: 1.0.1
+  defaultChannel: stable-v1
+  replaces: ibm-cpd-ae.v1.0.0

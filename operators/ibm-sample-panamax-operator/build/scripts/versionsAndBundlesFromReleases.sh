@@ -1,1 +1,0 @@
-../../submodules/operator-build-scripts/versionsAndBundlesFromReleases.sh

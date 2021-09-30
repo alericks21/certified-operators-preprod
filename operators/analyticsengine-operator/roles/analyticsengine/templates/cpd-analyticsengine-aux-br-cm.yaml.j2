@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cpd-{{ app }}-aux-br-cm
+  labels:
+    app.kubernetes.io/name: {{ app }}-aux-br
+    cpdfwk.aux-kind: br
+    cpdfwk.component: {{ app }}-br
+    cpdfwk.managed-by: ibm-cpd-sre
+    cpdfwk.module: {{ app }}-aux-br
+    cpdfwk.name: cpd-{{ app }}-aux-br-cm
+    cpdfwk.vendor: ibm
+    cpdfwk.version: 1.0.0
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+{% if owner_reference is defined %}
+  ownerReferences:
+    {{ owner_reference | to_nice_yaml | indent(4) }}
+{% endif %}
+data:
+  aux-meta: |-
+    name: {{ app }}-aux-br
+    description: This is auxillary meta for {{ app }} backup and restore operation
+    version: 1.0.0
+    component: {{ app }}-br
+    aux-kind: br
+    support-instances: true
+    priority-order: 10000
+    managed-resources:
+
+  backup-meta: |-
+    pre-hooks:
+      exec-rules:
+{% if ansible_operator_meta.name is defined %}
+      - resource-kind: analyticsengine.ae.cpd.ibm.com
+        name: {{ ansible_operator_meta.name }}
+        on-error: Propagate
+        actions:
+        - builtins:
+            name: cpdbr.cpd.ibm.com/enable-maint
+            params:
+                statusFieldName: analyticsengineStatus
+            timeout: 360s
+{% endif %}
+    post-hooks:
+      exec-rules:
+{% if ansible_operator_meta.name is defined %}
+      - resource-kind: analyticsengine.ae.cpd.ibm.com
+        name: {{ ansible_operator_meta.name }}
+        on-error: Propagate
+        actions:
+        - builtins:
+            name: cpdbr.cpd.ibm.com/disable-maint
+            params:
+                statusFieldName: analyticsengineStatus
+            timeout: 360s
+{% endif %}
+
+  restore-meta: |-
+    post-hooks:
+      exec-rules:
+{% if ansible_operator_meta.name is defined %}
+      - resource-kind: analyticsengine.ae.cpd.ibm.com
+        name: {{ ansible_operator_meta.name }}
+        on-error: Propagate
+        actions:
+        - builtins:
+            name: cpdbr.cpd.ibm.com/disable-maint
+            params:
+                statusFieldName: analyticsengineStatus
+            timeout: 360s
+{% endif %}

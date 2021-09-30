@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ibm-cpd-ae-operator
+  labels:
+    app.kubernetes.io/instance: ibm-cpd-ae-operator
+    app.kubernetes.io/managed-by: ibm-cpd-ae-operator
+    app.kubernetes.io/name: ibm-cpd-ae-operator
+    intent: projected
+spec:
+  selector:
+    matchLabels:
+      name: ibm-cpd-ae-operator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: ibm-cpd-ae-operator
+        app.kubernetes.io/instance: ibm-cpd-ae-operator
+        app.kubernetes.io/managed-by: ibm-cpd-ae-operator
+        app.kubernetes.io/name: ibm-cpd-ae-operator
+        intent: projected
+      annotations:
+        productName: "IBM Cloud Pak for Data"
+        productID: "eb9998dcc5d24e3eb5b6fb488f750fe2"
+        productVersion: "4.0.1"
+        cloudpakId: eb9998dcc5d24e3eb5b6fb488f750fe2
+        cloudpakName: Cloud Pak for Data
+        productMetric: FREE
+    spec:
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false      
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 3
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - ppc64le
+      serviceAccount: ibm-cpd-ae-operator-serviceaccount
+      serviceAccountName: ibm-cpd-ae-operator-serviceaccount
+      containers:
+        - name: ibm-cpd-ae-operator
+          image: icr.io/cpopen/ibm-cpd-analyticsengine-operator:1.0.0
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 6789
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          securityContext:
+            privileged: false
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false            
+            capabilities:
+              drop:
+                - ALL         
+          args:
+            - "--max-concurrent-reconciles"
+            - "8"
+          env:
+            - name: ANALYTICS_OPERATOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: namespace-scope
+                  key: namespaces
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name            
+            - name: OPERATOR_NAME
+              value: "ibm-cpd-ae-operator"
+            - name: "REGISTRY_SECRET"
+              value: "ibm-entitlement-key"
+            - name: "ENTITLED_REGISTRY_NAME"
+              value: "hyc-cloud-private-integration-docker-local.artifactory.swg-devops.com"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+      #     livenessProbe:
+      #       httpGet:
+      #         path: /readyz
+      #         port: 6789
+      #       initialDelaySeconds: 15
+      #       periodSeconds: 20
+      #     readinessProbe:
+      #       httpGet:
+      #         path: /healthz
+      #         port: 6789
+      #       initialDelaySeconds: 5
+      #       periodSeconds: 10
+      # terminationGracePeriodSeconds: 10

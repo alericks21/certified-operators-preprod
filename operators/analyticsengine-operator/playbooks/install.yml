@@ -1,0 +1,132 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  gather_subset: min
+
+  pre_tasks:
+    - name: Check versions provided in the CR
+      set_fact:
+        version: "4.0.1"
+        directory_prefix: "/"
+      when: version is not defined
+    - name: When version is defined add the prefix
+      set_fact:
+        directory_prefix: "/"
+      when: version is defined and version != ""
+    - include_vars: "{{ version }}{{ directory_prefix }}digests.yaml"
+    - name: When build_number is not defined
+      set_fact:
+        build_number: 245
+      when: build_number is not defined
+    - name: redefine namespace for operator
+      set_fact:
+        namespace: "{{ ansible_operator_meta.namespace }}"
+      when: ansible_operator_meta.namespace is defined
+    - name: Checking for license acceptance
+      include_role:
+        name: "{{ version }}{{ directory_prefix }}common"
+        tasks_from: check_license.yaml
+        public: no
+    - name: set owner references
+      include_role:
+        name: "{{ version }}{{ directory_prefix }}common"
+        tasks_from: set_owner_ref.yaml
+        public: no
+    - name: set scale size vars
+      include_role:
+        name: "{{ version }}{{ directory_prefix }}common"
+        tasks_from: set_scale_size.yaml
+        public: no
+    - include_vars: "{{ version }}{{ directory_prefix }}scale-config/{{ size }}.yaml"
+    - name: init product config info from zen
+      include_role:
+        name: "{{ version }}{{ directory_prefix }}common"
+        tasks_from: get_zen_product_config.yaml
+        public: no
+    - name: is 3.5 upgrade
+      include_role:
+        name: "{{ version }}{{ directory_prefix }}common"
+        tasks_from: is_upgrade.yaml
+        public: no
+    - name: set analyticsengine status to in progress
+      operator_sdk.util.k8s_status:
+        api_version: "ae.cpd.ibm.com/v1"
+        kind: AnalyticsEngine
+        name: "{{ ansible_operator_meta.name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        status:
+          analyticsengineBuildNumber: "{{ build_number }}"
+          analyticsengineStatus: InProgress
+      register: cr_status_result
+      retries: 5
+      delay: 5
+      until: cr_status_result is not failed
+      when: ansible_operator_meta.name is defined
+
+  tasks:
+
+  - name: run analyticsengine roles
+    block:
+    - name: run analyticsengine role
+      include_role:
+        name: "{{ item }}"
+      loop:
+        - "{{ version }}{{ directory_prefix }}analyticsengine"
+    rescue:
+    - name: set analyticsengine status to failed
+      operator_sdk.util.k8s_status:
+        api_version: "ae.cpd.ibm.com/v1"
+        kind: AnalyticsEngine
+        name: "{{ ansible_operator_meta.name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        status:
+          analyticsengineStatus: Failed
+      register: cr_status_result
+      retries: 5
+      delay: 5
+      until: cr_status_result is not failed
+      when: ansible_operator_meta.name is defined
+    - name: print error
+      fail: 
+        msg: "{{ cur_role | default ('The playbook') }} has failed. See earlier output for exact error"
+    when: ignoreForMaintenance is not defined or ignoreForMaintenance == False
+    
+  - name: Maintenance Mode
+    debug:
+      msg: "In maintenance mode: {{ ignoreForMaintenance }}"
+    when: ignoreForMaintenance is defined and ignoreForMaintenance
+      
+  post_tasks:
+    - name: update status
+      operator_sdk.util.k8s_status:
+        api_version: "ae.cpd.ibm.com/v1"
+        kind: AnalyticsEngine
+        name: "{{ ansible_operator_meta.name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        status:
+          analyticsengineStatus: Completed
+      register: cr_status_result
+      retries: 5
+      delay: 5
+      until: cr_status_result is not failed
+      when: ansible_operator_meta.name is defined
+    - name: analyticsengine in maintenance mode
+      operator_sdk.util.k8s_status:
+        api_version: "ae.cpd.ibm.com/v1"
+        kind: AnalyticsEngine
+        name: "{{ ansible_operator_meta.name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        status:
+          analyticsengineStatus: InMaintenance
+      register: cr_status_result
+      retries: 5
+      delay: 5
+      until: cr_status_result is not failed
+      when: ansible_operator_meta.name is defined and ignoreForMaintenance is defined and ignoreForMaintenance
+
+# working code
+#---
+#- hosts: localhost
+#  gather_facts: no
+#  roles:
+#    - analyticsengine

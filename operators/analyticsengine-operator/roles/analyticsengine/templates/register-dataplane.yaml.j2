@@ -1,0 +1,123 @@
+# This is a YAML-formatted file.
+
+apiVersion: apps/v1 # for versions before 1.8.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ name }}-register-hb-dataplane"
+  labels:
+    function: "{{ name }}-register-hb-dataplane"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+  annotations:
+{% if metering  %} 
+    {{ metering | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  selector:
+    matchLabels:
+      function: "{{ name }}-register-hb-dataplane"
+{% if cpdLabels  %} 
+      {{ cpdLabels | to_nice_yaml| indent(6) }}
+{% endif %}
+  template: # create pods using pod definition in this template
+    metadata:
+      annotations:
+{% if metering  %} 
+        {{ metering | to_nice_yaml| indent(8) }}
+{% endif %}
+      # the name is not included in the meta data as a unique name is
+      # generated from the deployment name
+      labels:
+        function: "{{ name }}-register-hb-dataplane"
+{% if cpdLabels  %} 
+        {{ cpdLabels | to_nice_yaml| indent(8) }}
+{% endif %}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - {{ global.architecture }}
+      serviceAccount: {{ sa.viewer }}
+      serviceAccountName: {{ sa.viewer }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      containers:
+      - name: "{{ name }}-register-hb-dataplane"
+        env:
+        - name: TEMPLATE_LIST
+          valueFrom:
+            configMapKeyRef:
+               name: "{{ name }}-{{ dataplane_reg.name }}-script"
+               key: template-list
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          privileged: false
+          readOnlyRootFilesystem: false
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.dataplane_reg %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.dataplane_reg is defined %}
+{% set image_prefix = pull_prefix.dataplane_reg %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+        image: "{{ image_prefix }}/{{ images.dataplane_reg }}{{ image_separator }}{{ image_suffix }}"
+        imagePullPolicy: {{ micro_service.pull_policy }}
+        readinessProbe:
+          exec:
+            command:
+            - ls
+            - /tmp/_SUCCESS
+          initialDelaySeconds: {{ dataplane_reg.readiness_probe.initial_delay_seconds }}
+          periodSeconds: {{ dataplane_reg.readiness_probe.period_seconds }}
+          failureThreshold: {{ dataplane_reg.readiness_probe.failure_threshold }}
+        livenessProbe:
+          exec:
+            command:
+            - ls
+            - /tmp/_SUCCESS
+          initialDelaySeconds: {{ dataplane_reg.liveness_probe.initial_delay_seconds }}
+          periodSeconds: {{ dataplane_reg.liveness_probe.period_seconds }}
+          failureThreshold: {{ dataplane_reg.liveness_probe.failure_threshold }}
+        resources:
+          requests:
+            cpu: {{ dataplane_reg.requests.cpu }}
+            memory: {{ dataplane_reg.requests.memory }}
+          limits:
+            cpu: {{ dataplane_reg.limits.cpu }}
+            memory: {{ dataplane_reg.limits.memory }}
+        command: ["/bin/bash", "-c"]
+        args:
+          - "bash {{ dataplane_reg.script_path }}register-dataplane.sh {{ dataplane_reg.name }} {{ nginx.scheme }}://{{ name }}-{{ nginx.name }}-external {{ micro_service.scheme }}://{{ name }}-control-plane:{{ micro_service.port }} {{ data_plane_manager_service.path }} {{ helm_based_service.path }} {{ nfs.path }} {{ nfs.server }} {{ icp4d.nginx_url }} {{ dataplane_reg.script_path }} {{ namespace }} {{ nginx.container_port }} {{ cleanup_cron.script_path }} {{ cleanup_cron.config_path }} {{ zen_core.tiller_endpoint }} {{ instance_manager_service.path }} {{ kernel_service.context_root }} {{ job_service.path_v2 }}"
+        volumeMounts:
+        - name: "{{ name }}-{{ dataplane_reg.name }}-script"
+          mountPath: "{{ dataplane_reg.script_path }}"
+        - name: "{{ name }}-cleanup-scripts"
+          mountPath: "{{ cleanup_cron.script_path }}"
+        - name: "{{ name }}-cleanup-configs"
+          mountPath: "{{ cleanup_cron.config_path }}"
+      volumes:
+        - name: "{{ name }}-{{ dataplane_reg.name }}-script"
+          configMap:
+            name: "{{ name }}-{{ dataplane_reg.name }}-script"
+        - name: "{{ name }}-cleanup-scripts"
+          configMap:
+            name: "{{ name }}-cleanup-scripts"
+        - name: "{{ name }}-cleanup-configs"
+          configMap:
+            name: "{{ name }}-cleanup-configs"

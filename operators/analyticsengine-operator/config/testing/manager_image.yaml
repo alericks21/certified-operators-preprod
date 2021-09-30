@@ -1,0 +1,12 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ibm-cpd-ae-operator
+  namespace: ibm-cpd-ae-operator-namespace
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          image: testing

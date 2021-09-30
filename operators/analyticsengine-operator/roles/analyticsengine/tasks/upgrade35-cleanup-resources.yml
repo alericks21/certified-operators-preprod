@@ -1,0 +1,22 @@
+- name: Get the {{ name }} preload jkg image cron details
+  k8s_info:
+    api_version: batch/v1beta1
+    kind: CronJob
+    name: "{{ name }}-preload-jkg-image"
+    namespace: "{{ namespace }}"
+  register: preload_jkg_image_cron_info
+  when: is_35_upgrade
+
+- name: Remove old existing CPD 3.5 {{ name }} preload image cronjob
+  k8s:
+    state: absent
+    namespace: "{{ namespace }}"
+    definition: "{{ lookup('template', 'preload-images-cronjobs.yaml.j2') | from_yaml }}"
+    delete_options:
+      propagationPolicy: "Background"
+  when: is_35_upgrade and ( preload_jkg_image_cron_info.resources[0].metadata.labels.release is defined and  preload_jkg_image_cron_info.resources[0].metadata.labels.release == "ibm-spark-prod" )
+    
+- name: Sleep for 60 seconds for resources to be released
+  wait_for:
+    timeout: 60
+  delegate_to: localhost

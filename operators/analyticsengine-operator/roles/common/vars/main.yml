@@ -1,0 +1,60 @@
+---
+# vars file for common
+
+zenhelper:
+  # labels: "{{ app | get_standard_labels(app, release, comp, {'release': release, 'app': app, 'component': comp }) }}"
+  labels:
+    app: "{{ app }}"
+    app.kubernetes.io/component: "{{comp}}"
+    app.kubernetes.io/instance: "{{ app }}"
+    app.kubernetes.io/managed-by: "{{ release }}"
+    component: "{{comp}}"
+    release: "{{release}}"
+  annotations: "{{ metering }}"
+  user_home_pvc: "{{ lookup('template', '../common/templates/user_home_pvc.yaml.j2') }}"
+  node_arch_affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+              - "{{ architecture }}"
+
+zen_pod_anti_affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: component
+            operator: In
+            values:
+            - "{{ comp }}"
+        topologyKey: kubernetes.io/hostname
+
+cpdLabels:
+  release: 'ibm-spark-lite-prod'
+  app: spark-lite
+  component: spark-lite
+  app.kubernetes.io/name: 'spark-lite'
+  app.kubernetes.io/managed-by: 'spark-lite'
+  app.kubernetes.io/instance: 'ibm-spark-lite-prod'
+  app.kubernetes.io/component: spark-lite
+  icpdsupport/addOnId: "{{ global.add_on_id }}"
+  icpdsupport/app: "api"
+
+metering: 
+  productName: "Analytics Engine powered by Apache Spark"
+  productID: "eb9998dcc5d24e3eb5b6fb488f750fe2"
+  productVersion: "4.0.1"
+  productCloudpakRatio: "1:1"
+  productMetric: "VIRTUAL_PROCESSOR_CORE"
+  productChargedContainers: All
+  cloudpakId: "eb9998dcc5d24e3eb5b6fb488f750fe2"
+  cloudpakName: "IBM Cloud Pak for Data"
+  cloudpakInstanceId: "{{ cloudpak_instance_id }}"
+  hook.deactivate.cpd.ibm.com/command: "[]"
+  hook.activate.cpd.ibm.com/command: "[]"

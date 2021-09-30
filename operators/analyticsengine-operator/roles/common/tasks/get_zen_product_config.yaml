@@ -1,0 +1,15 @@
+- block:
+  - name: Get zen product configmap
+    k8s_info:
+      api_version: v1
+      kind: ConfigMap
+      name: 'product-configmap'
+      namespace: '{{ namespace }}'
+    register: zenProductConfig
+    
+  - name: Set cloudpakInstanceId 
+    set_fact:
+      cloudpak_instance_id: "{{ zenProductConfig.resources[0].data.CLOUD_PAK_INSTANCE_ID | default('') }}"
+    
+  - debug:
+      msg: "cloudpak_instance_id: {{ cloudpak_instance_id }}"

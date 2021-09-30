@@ -1,0 +1,268 @@
+apiVersion: apps/v1 # for versions before 1.8.0 use apps/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ name }}-control-plane"
+  labels:
+    function: "{{ name }}-control-plane"
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+  annotations:
+{% if metering  %} 
+    {{ metering | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  selector:
+    matchLabels:
+      function: "{{ name }}-control-plane"
+{% if cpdLabels  %} 
+      {{ cpdLabels | to_nice_yaml| indent(6) }}
+{% endif %}
+  replicas: {{ replicas }} # tells deployment to run X pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      annotations:
+{% if metering  %} 
+        {{ metering | to_nice_yaml| indent(8) }}
+{% endif %}
+      # the name is not included in the meta data as a unique name is
+      # generated from the deployment name
+      labels:
+        function: "{{ name }}-control-plane"
+{% if cpdLabels  %} 
+        {{ cpdLabels | to_nice_yaml| indent(8) }}
+{% endif %}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - {{ global.architecture }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      containers:
+      - name: "{{ name }}-control-plane"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          privileged: false
+          readOnlyRootFilesystem: false
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.control_plane %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.control_plane is defined %}
+{% set image_prefix = pull_prefix.control_plane %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+        image: "{{ image_prefix }}/{{ images.control_plane }}{{ image_separator }}{{ image_suffix }}"
+        imagePullPolicy: {{ micro_service.pull_policy }}
+        resources:
+          requests:
+            cpu: {{ micro_service.requests.cpu }}
+            memory: {{ micro_service.requests.memory }}
+          limits:
+            cpu: {{ micro_service.limits.cpu }}
+            memory: {{ micro_service.limits.memory }}
+        ports:
+        - containerPort: {{ micro_service.target_port }}
+          protocol: TCP
+        volumeMounts:
+        - name: "{{ name }}-cp-confidential-properties"
+          mountPath: "{{ micro_service.confidential_properties }}"
+          readOnly: true
+        - name: "{{ name }}-cp-deployment-properties"
+          mountPath: "{{ micro_service.deployment_config_path }}"
+{% if micro_service.is_local_mode is defined %}
+        - name: "{{ name }}-resource-limit-properties"
+          mountPath: "{{ micro_service.resource_limit_path }}"
+        - name: "{{ name }}-cp-wdp-secret"
+          mountPath: "{{ micro_service.wdp_properties_path }}"
+        - name: "{{ name }}-zen-user-home-pvc"
+          mountPath: "{{ micro_service.jwt_certs }}"
+          subPath: "{{ zen_user_home_vol.jwt_cert_path }}"
+          readOnly: true
+        - name: "{{ trust_store.icp4d_ts_secret_name }}"
+          mountPath: "{{ micro_service.trust_store_path }}/cacerts"
+          subPath: cacerts
+          readOnly: true
+#        - name: "{{ rabbit_mq.trust_store_secret_name }}"
+#          mountPath: "{{ micro_service.mq_trust_store_path }}/mqtruststore"
+#          subPath: mqtruststore
+#          readOnly: true
+        - name: "service-broker-token"
+          mountPath: "{{ micro_service.service_broker_token_path }}"
+          readOnly: true
+        - name: "{{ name }}-audit-logs-vol"
+          mountPath: {{ micro_service.audit_event_logs_path }}
+{% if spark_metastoredb.cockroachdb %}
+        - name: "{{ trust_store.zen_metastore_certs_secret_name }}"
+          mountPath: "{{ micro_service.zen_metastore_certs }}"
+{% else %}
+        - name: {{ spark_metastoredb.postgres_secret_name }}
+          mountPath: "{{ micro_service.zen_metastore_certs }}"
+{% endif %}
+{% endif %}
+        readinessProbe:
+          httpGet:
+            path: "{{ kernel_service.path }}/ping"
+            port: {{ micro_service.target_port }}
+            scheme: {{ micro_service.readiness_probe_scheme }}
+          initialDelaySeconds: {{ readiness_probe.initial_delay_seconds }}
+          periodSeconds: {{ readiness_probe.period_seconds }}
+          failureThreshold: {{ readiness_probe.failure_threshold }}
+          timeoutSeconds: {{ readiness_probe.timeout_seconds }}
+        livenessProbe:
+          exec:
+            command:
+            - ls
+            - /opt/hb/deployment_config/deployment.properties
+          initialDelaySeconds: {{ liveness_probe.initial_delay_seconds }}
+          periodSeconds: {{ liveness_probe.period_seconds }}
+          failureThreshold: {{ liveness_probe.failure_threshold }}
+          timeoutSeconds: {{ liveness_probe.timeout_seconds }}
+      - name: "{{ name }}-rsyslog-sidecar"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          privileged: false
+          readOnlyRootFilesystem: false
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.syslog %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.syslog is defined %}
+{% set image_prefix = pull_prefix.syslog %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+        image: "{{ image_prefix }}/{{ images.syslog }}{{ image_separator }}{{ image_suffix }}"
+        imagePullPolicy: {{ micro_service.pull_policy }}
+        command: ["/bin/bash", "-c"]
+        args: ["/startup.sh {{ micro_service.rsyslog_config_path }}"]
+        resources:
+          requests:
+            cpu: {{ rsyslog.requests.cpu }}
+            memory: {{ rsyslog.requests.memory }}
+          limits:
+            cpu: {{ rsyslog.limits.cpu }}
+            memory: {{ rsyslog.limits.memory }}
+        readinessProbe:
+          exec:
+            command:
+            - ls
+            - /var/log/audit
+          initialDelaySeconds: {{ rsyslog.readiness_probe.initial_delay_seconds }}
+          periodSeconds: {{ rsyslog.readiness_probe.period_seconds }}
+          failureThreshold: {{ rsyslog.readiness_probe.failure_threshold }}
+        livenessProbe:
+          exec:
+            command:
+            - ls
+            - /var/log/audit
+          initialDelaySeconds: {{ rsyslog.liveness_probe.initial_delay_seconds }}
+          periodSeconds: {{ rsyslog.liveness_probe.period_seconds }}
+          failureThreshold: {{ rsyslog.liveness_probe.failure_threshold }}
+        env:
+        - name: AUDIT_ENABLED
+          value: "{{ micro_service.enable_audit }}"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: PODIPADDRESS
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: product-configmap
+        volumeMounts:
+        - name: "{{ name }}-audit-logs-vol"
+          mountPath: {{ micro_service.audit_event_logs_path }}       
+        - name: "{{ name }}-rsyslog-config-vol"
+          mountPath: {{ micro_service.rsyslog_config_path }}
+        - name: {{ trust_store.cert_secret_name }}
+          mountPath: /etc/internal-tls
+      serviceAccount: {{ sa.editor }}
+      serviceAccountName: {{ sa.editor }}
+      volumes:
+        - name: "{{ name }}-cp-confidential-properties"
+          secret:
+            secretName: "{{ name }}-confidential-properties" 
+        - name: "{{ name }}-cp-deployment-properties"
+          configMap:
+            name: "{{ name }}-deployment-properties"
+            items:
+            - key: "deployment-properties"
+              path: "deployment.properties"
+{% if micro_service.is_local_mode is defined %}
+        - name: "{{ name }}-resource-limit-properties"
+          configMap:
+            name: "{{ name }}-resource-limit"
+            items:
+            - key: "resource-limit-properties"
+              path: "resource-limit.properties"
+        - name: "{{ name }}-cp-wdp-secret"
+          secret:
+            secretName: "{{ micro_service.wdp_secret_name }}"
+            items:
+            - key: service-id-credentials
+              path: wdp.properties
+        - name: "{{ name }}-zen-user-home-pvc"
+          persistentVolumeClaim:
+            claimName: "{{ zen_user_home_vol.name }}"
+        - name: "{{ trust_store.icp4d_ts_secret_name }}"
+          secret:
+            secretName: "{{ trust_store.icp4d_ts_secret_name }}"
+#        - name: "{{ rabbit_mq.trust_store_secret_name }}"
+#          secret:
+#            secretName: "{{ rabbit_mq.trust_store_secret_name }}"
+        - name: "service-broker-token"
+          secret:
+            secretName: "{{ micro_service.service_broker_token_secret }}"
+            items:
+            - key: token
+              path: cpd_service_broker.properties
+        - name: "{{ name }}-rsyslog-config-vol"
+          configMap:
+            name: "{{ name }}-rsyslog-config"
+        - name: "{{ name }}-audit-logs-vol"
+          emptyDir: {}
+        - name: {{ trust_store.cert_secret_name }}
+          secret:
+            secretName: {{ trust_store.cert_secret_name }}
+            defaultMode: 420
+{% if spark_metastoredb.cockroachdb %}
+        - name: "{{ trust_store.zen_metastore_certs_secret_name }}"
+          secret:
+            secretName: "{{ trust_store.zen_metastore_certs_secret_name }}"
+{% else %}
+        - name: {{ spark_metastoredb.postgres_secret_name }}
+          secret:
+           secretName: {{ spark_metastoredb.postgres_secret_name }}
+           defaultMode: 420
+{% endif %}
+{% endif %}

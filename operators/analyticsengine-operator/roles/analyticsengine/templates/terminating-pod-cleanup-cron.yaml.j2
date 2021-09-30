@@ -1,0 +1,116 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ name }}-terminating-pod-cleanup-cron
+  labels: 
+    function: {{ name }}-terminating-pod-cleanup-cron
+{% if cpdLabels  %} 
+    {{ cpdLabels | to_nice_yaml| indent(4) }}
+{% endif %}
+  annotations:
+{% if metering  %} 
+    {{ metering | to_nice_yaml| indent(4) }}
+{% endif %}
+spec:
+  schedule: "{{ terminating_pod_cleanup_cron.schedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 0
+  jobTemplate:
+    metadata:
+{% if owner_reference is defined %}
+      ownerReferences:
+        {{ owner_reference | to_nice_yaml | indent(8) }}
+{% endif %}
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+{% if owner_reference is defined %}
+          ownerReferences:
+            {{ owner_reference | to_nice_yaml | indent(12) }}
+{% endif %}
+          annotations:
+{% if metering  %} 
+            {{ metering | to_nice_yaml| indent(12) }}
+{% endif %}
+          labels: 
+            function: {{ name }}-terminating-pod-cleanup-cron
+{% if cpdLabels  %} 
+            {{ cpdLabels | to_nice_yaml| indent(12) }}
+{% endif %}
+        spec:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                          - {{ global.architecture }}
+            hostNetwork: false
+            hostPID: false
+            hostIPC: false     
+            containers:
+            - name: {{ name }}-terminating-pod-cleanup-cron
+{% if image_tags is defined and image_tags.tag is defined %}
+{% set image_suffix = image_tags.tag %}
+{% set image_separator = ":" %}
+{% else %}
+{% set image_suffix = image_digests.trust_store %}
+{% set image_separator = "@" %}
+{% endif %}
+{% if pull_prefix is defined and pull_prefix.trust_store is defined %}
+{% set image_prefix = pull_prefix.trust_store %}
+{% else %}
+{% set image_prefix = pullPrefix %}
+{% endif %}
+              image: "{{ image_prefix }}/{{ images.trust_store }}{{ image_separator }}{{ image_suffix }}"
+              imagePullPolicy: {{ micro_service.pull_policy }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL 
+                runAsNonRoot: true
+                privileged: false
+                readOnlyRootFilesystem: false
+              resources:
+                requests:
+                  cpu: {{ terminating_pod_cleanup_cron.requests.cpu }}
+                  memory: {{ terminating_pod_cleanup_cron.requests.memory }}
+                limits:
+                  cpu: {{ terminating_pod_cleanup_cron.limits.cpu }}
+                  memory: {{ terminating_pod_cleanup_cron.limits.memory }}
+              command: ["/bin/sh", "-c"]
+              args : ["bash {{ cleanup_cron.script_path }}/cleanup-terminating-pod.sh"]
+              volumeMounts:
+              - name: "{{ name }}-cleanup-scripts"
+                mountPath: "{{ cleanup_cron.script_path }}"
+              readinessProbe:
+                exec:
+                  command:
+                  - ls
+                  - {{ cleanup_cron.script_path }}/cleanup-terminating-pod.sh
+                initialDelaySeconds: {{ readiness_probe.initial_delay_seconds }}
+                periodSeconds: {{ readiness_probe.period_seconds }}
+                failureThreshold: {{ readiness_probe.failure_threshold }}
+                timeoutSeconds: {{ readiness_probe.timeout_seconds }}
+              livenessProbe:
+                exec:
+                  command:
+                  - ls
+                  - {{ cleanup_cron.script_path }}/cleanup-terminating-pod.sh
+                initialDelaySeconds: {{ liveness_probe.initial_delay_seconds }}
+                periodSeconds: {{ liveness_probe.period_seconds }}
+                failureThreshold: {{ liveness_probe.failure_threshold }}
+                timeoutSeconds: {{ liveness_probe.timeout_seconds }}
+            restartPolicy: "Never"
+            serviceAccount: {{ sa.editor }}
+            serviceAccountName: {{ sa.editor }}
+            volumes:
+            - name: "{{ name }}-cleanup-scripts"
+              configMap:
+                name: "{{ name }}-cleanup-scripts"

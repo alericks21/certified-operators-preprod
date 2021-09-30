@@ -1,0 +1,59 @@
+---
+# tasks file for analyticsengine
+
+- debug:
+    msg: "Starting Installation tasks of IBM Analytics Engine powered by Apache Spark"
+
+########################################################################################
+- name: redefine namespace for operator
+  set_fact:
+    namespace: "{{ ansible_operator_meta.namespace }}"  # redefine namespace for operator
+  when: ansible_operator_meta.namespace is defined
+
+- name: populate variables with custom resource spec values
+  include_tasks: set_cr_specs.yaml
+
+########################################################################################
+
+- name: create secrets
+  include_tasks: create-confidential-secret.yml
+  
+- name: create wdp service credentials
+  include_tasks: create-wdp-secret.yml
+ 
+- name: create truststore scecret
+  include_tasks: create-truststore-secret.yml
+
+- name: load db specs
+  include_tasks: load-db-specs.yml
+
+- name: Delete 3.5 resources
+  include_tasks: upgrade35-cleanup-resources.yml
+  when: is_35_upgrade
+  
+- name: preload runtime images
+  include_tasks: preload-runtime-images.yml
+
+- name: deploy micro services
+  include_tasks: deploy-microservices.yml
+  
+- name: deploy nginx
+  include_tasks: deploy-nginx.yml
+  
+- name: deploy cleanup crons
+  include_tasks: deploy-cleanup-crons.yml
+
+- name: create cpd Backup/Restore & Quiesce/Unquiesce configmap 
+  include_tasks: create-cpdbr-configmap.yml
+
+- name: status check of nginx
+  include_tasks: check-status-of-nginx.yml
+  
+- name: status check of microservices
+  include_tasks: check-status-of-microservices.yml
+  
+- name: status check of preload images
+  include_tasks: check-status-of-preload-images.yml
+
+- name: register dataplane
+  include_tasks: register-dataplane.yml

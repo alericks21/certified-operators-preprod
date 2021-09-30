@@ -1,0 +1,60 @@
+- include_vars: default_specs.yaml
+
+- name: override defaultServiceConfig
+  set_fact: 
+    finalServiceConfig: "{{ defaultServiceConfig|combine(serviceConfig, recursive=True) }}"
+  when: serviceConfig is defined and serviceConfig is iterable
+  
+- name: override defaultSparkRuntimeConfig
+  set_fact: 
+    finalSparkRuntimeConfig: "{{ defaultSparkRuntimeConfig|combine(sparkRuntimeConfig, recursive=True) }}"
+  when: sparkRuntimeConfig is defined and sparkRuntimeConfig is iterable
+
+- name: override defaultSparkRuntimeConfig
+  set_fact: 
+    finalServiceInstanceConfig: "{{ defaultServiceInstanceConfig|combine(serviceInstanceConfig, recursive=True) }}"
+  when: serviceInstanceConfig is defined and serviceInstanceConfig is iterable
+
+- name: assign defaultServiceConfig to finalServiceConfig if serviceConfig not defined
+  set_fact: 
+    finalServiceConfig: "{{ defaultServiceConfig }}"
+  when: serviceConfig is not defined or serviceConfig is not iterable
+  
+- name: assign defaultSparkRuntimeConfig to finalSparkRuntimeConfig if sparkRuntimeConfig not defined
+  set_fact: 
+    finalSparkRuntimeConfig: "{{ defaultSparkRuntimeConfig }}"
+  when: sparkRuntimeConfig is not defined or sparkRuntimeConfig is not iterable
+
+- name: assign defaultServiceInstanceConfig to finalServiceInstanceConfig if serviceInstanceConfig not defined
+  set_fact: 
+    finalServiceInstanceConfig: "{{ defaultServiceInstanceConfig }}"
+  when: serviceInstanceConfig is not defined or serviceInstanceConfig is not iterable
+
+- name: set service_config
+  set_fact:
+    service_config:
+      is_spark_adv_enabled: "{{ finalServiceConfig.sparkAdvEnabled }}"
+      is_immediately_job_delete_enabled: "{{ finalServiceConfig.jobAutoDeleteEnabled }}"
+      is_fips_enabled: "{{ finalServiceConfig.fipsEnabled }}"
+      idle_kernel_time_before_shutdown: "{{ finalServiceConfig.kernelCullTime }}"
+      image_pull_completions: "{{ finalServiceConfig.imagePullCompletions }}"
+      image_pull_parallelism: "{{ finalServiceConfig.imagePullParallelism }}"
+    kernel_cleanup_cron:
+      schedule: "{{ finalServiceConfig.kernelCleanupSchedule }}"
+    job_cleanup_cron:
+      schedule: "{{ finalServiceConfig.jobCleanupSchedule }}"
+
+- name: set spark_runtime_config
+  set_fact:
+    spark_runtime_config:
+      max_driver_cpu_cores: "{{ finalSparkRuntimeConfig.maxDriverCpuCores }}"
+      max_executor_cpu_cores: "{{ finalSparkRuntimeConfig.maxExecutorCpuCores }}"
+      max_driver_memory: "{{ finalSparkRuntimeConfig.maxDriverMemory }}"
+      max_executor_memory: "{{ finalSparkRuntimeConfig.maxExecutorMemory }}"
+      max_num_workers: "{{ finalSparkRuntimeConfig.maxNumWorkers }}"
+
+- name: set instance_config
+  set_fact:
+    instance_config:
+      default_cpu_quota: "{{ finalServiceInstanceConfig.defaultCpuQuota }}"
+      default_memory_quota: "{{ finalServiceInstanceConfig.defaultMemoryQuota }}"
