@@ -67,7 +67,7 @@ spec:
         name: ""
         version: v1
       specDescriptors:
-       - description: "You must read and accept the license terms to install the software."
+        - description: "You must read and accept the license terms to install the software."
          displayName: License
          path: license
        - description: "Service scale configuration for control plane installation."
@@ -110,7 +110,7 @@ spec:
          - urn:alm:descriptor:com.tectonic.ui:select:Enterprise
          - urn:alm:descriptor:com.tectonic.ui:select:Standard
        - description: "This flag will enable or disable Jobs & Spaces UI capabilities of AnalyticsEngine service."
-         displayName: AnalyticsEngine Advance Features 
+         displayName: AnalyticsEngine Advance Features
          path: serviceConfig.sparkAdvEnabled
          value:
          - false
