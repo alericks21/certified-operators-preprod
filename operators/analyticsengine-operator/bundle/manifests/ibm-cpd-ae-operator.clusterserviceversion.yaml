@@ -79,115 +79,115 @@ spec:
           - urn:alm:descriptor:com.tectonic.ui:select:small
           - urn:alm:descriptor:com.tectonic.ui:select:medium
           - urn:alm:descriptor:com.tectonic.ui:select:large
-       - displayName: Maintenance Mode
-         description: Set maintenance mode to true to quiesce and backup the services.
-         path: ignoreForMaintenance
-         value:
-         - false
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-       - description: "Settings that control service level configurations."
-         displayName: serviceConfig
-         path: serviceConfig
-       - description: "Settings that control spark runtime level configurations."
-         displayName: sparkRuntimeConfig
-         path: sparkRuntimeConfig
-       - description: "Settings that control AnalyticsEngine service instance default resource quota configurations."
-         displayName: serviceInstanceConfig
-         path: serviceInstanceConfig
-       - description: "Indicate that you read and accept the license terms."
-         displayName: Accept license
-         value:
-         - false
-         path: license.accept
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-       - description: "Select the license that you purchased.\n• Select Enterprise for IBM Cloud Pak for Data Enterprise Edition (https://ibm.biz/BdffBz) \n• Select Standard for IBM Cloud Pak for Data Standard Edition (https://ibm.biz/BdffBf)\n"
-         displayName: License
-         path: license.license
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:fieldDependency:license.accept:true
-         - urn:alm:descriptor:com.tectonic.ui:select:Enterprise
-         - urn:alm:descriptor:com.tectonic.ui:select:Standard
-       - description: "This flag will enable or disable Jobs & Spaces UI capabilities of AnalyticsEngine service."
-         displayName: AnalyticsEngine Advance Features
-         path: serviceConfig.sparkAdvEnabled
-         value:
-         - false
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-       - description: "Set it to false if you do not want to immediatly removed spark jobs once they have reached terminal states e.g FINISHED/FAILED."
-         displayName: Spark job auto delete
-         path: serviceConfig.jobAutoDeleteEnabled
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-       - description: "Set it to true if your system is FIPS enabled"
-         displayName: FIPS enabled environment
-         path: serviceConfig.fipsEnabled
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-       - description: "Set value to X minutes, if want to remove idle kernel after X minutes."
-         displayName: JEG spark kernel cull time
-         path: serviceConfig.kernelCullTime
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-       - displayName: Spark runtime image pull completions.
-         path: serviceConfig.imagePullCompletions
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-         - urn:alm:descriptor:com.tectonic.ui:advanced
-       - description: "If you have very large Openshift cluster in that case you can update imagePullCompletions & imagePullParallelism accordingly e.g. if you have 100 nodes cluster set imagePullCompletions: 100 & imagePullParallelism: 150."
-         displayName: Spark runtime image pull parallelism
-         path: serviceConfig.imagePullParallelism
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-         - urn:alm:descriptor:com.tectonic.ui:advanced
-       - displayName: Spark kernel cleanup schedule
-         path: serviceConfig.kernelCleanupSchedule
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:text
-         - urn:alm:descriptor:com.tectonic.ui:advanced
-       - description: "By default kernel & job cleanup cronjobs look for idle spark kernels/jobs and based on kernelCullTime parameter it teminates them, if you want cleanup less/more aggressively change accordingly. e.g for 1 hour * */1 * * * k8s format."
-         displayName: Spark job cleanup schedule
-         path: serviceConfig.jobCleanupSchedule
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:text
-         - urn:alm:descriptor:com.tectonic.ui:advanced
-       - description: "Spark runtime configuration to set max driver CPUs allowed for spark job."
-         displayName: Max allowed spark job driver CPU cores
-         path: sparkRuntimeConfig.maxDriverCpuCores
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-       - description: "Spark runtime configuration to set max execute CPUs allowed per executor for spark job."
-         displayName: Max allowed spark job executor CPU cores
-         path: sparkRuntimeConfig.maxExecutorCpuCores
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-       - description: "Spark runtime configuration to set max driver memory allowed for spark job."
-         displayName: Max allowed spark driver memory
-         path: sparkRuntimeConfig.maxDriverMemory
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:text
-       - description: "Spark runtime configuration to set max executor memory allowed per executor for spark job."
-         displayName: Max allowed spark executor memory
-         path: sparkRuntimeConfig.maxExecutorMemory
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:text
-       - description: "Spark runtime configuration to set max number of executors allowed per spark job"
-         displayName: Max allowed number of executors per spark job
-         path: sparkRuntimeConfig.maxNumWorkers
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-       - description: "Default CPU quota means accumulative CPU consumption of spark jobs created under an instance can be no more than set value"
-         displayName: CPU quota per AnalyticsEngine service instance
-         path: serviceInstanceConfig.defaultCpuQuota
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
-       - description: "Default memory quota means accumulative memory consumption of spark jobs created under an instance can be no more than set value"
-         displayName: Memory quota per AnalyticsEngine service instance in GB
-         path: serviceInstanceConfig.defaultMemoryQuota
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:number
+        - displayName: Maintenance Mode
+          description: Set maintenance mode to true to quiesce and backup the services.
+          path: ignoreForMaintenance
+          value:
+          - false
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - description: "Settings that control service level configurations."
+          displayName: serviceConfig
+          path: serviceConfig
+        - description: "Settings that control spark runtime level configurations."
+          displayName: sparkRuntimeConfig
+          path: sparkRuntimeConfig
+        - description: "Settings that control AnalyticsEngine service instance default resource quota configurations."
+          displayName: serviceInstanceConfig
+          path: serviceInstanceConfig
+        - description: "Indicate that you read and accept the license terms."
+          displayName: Accept license
+          value:
+          - false
+          path: license.accept
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - description: "Select the license that you purchased.\n• Select Enterprise for IBM Cloud Pak for Data Enterprise Edition (https://ibm.biz/BdffBz) \n• Select Standard for IBM Cloud Pak for Data Standard Edition (https://ibm.biz/BdffBf)\n"
+          displayName: License
+          path: license.license
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:fieldDependency:license.accept:true
+          - urn:alm:descriptor:com.tectonic.ui:select:Enterprise
+          - urn:alm:descriptor:com.tectonic.ui:select:Standard
+        - description: "This flag will enable or disable Jobs & Spaces UI capabilities of AnalyticsEngine service."
+          displayName: AnalyticsEngine Advance Features
+          path: serviceConfig.sparkAdvEnabled
+          value:
+          - false
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - description: "Set it to false if you do not want to immediatly removed spark jobs once they have reached terminal states e.g FINISHED/FAILED."
+          displayName: Spark job auto delete
+          path: serviceConfig.jobAutoDeleteEnabled
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - description: "Set it to true if your system is FIPS enabled"
+          displayName: FIPS enabled environment
+          path: serviceConfig.fipsEnabled
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - description: "Set value to X minutes, if want to remove idle kernel after X minutes."
+          displayName: JEG spark kernel cull time
+          path: serviceConfig.kernelCullTime
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+        - displayName: Spark runtime image pull completions.
+          path: serviceConfig.imagePullCompletions
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+          - urn:alm:descriptor:com.tectonic.ui:advanced
+        - description: "If you have very large Openshift cluster in that case you can update imagePullCompletions & imagePullParallelism accordingly e.g. if you have 100 nodes cluster set imagePullCompletions: 100 & imagePullParallelism: 150."
+          displayName: Spark runtime image pull parallelism
+          path: serviceConfig.imagePullParallelism
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+          - urn:alm:descriptor:com.tectonic.ui:advanced
+        - displayName: Spark kernel cleanup schedule
+          path: serviceConfig.kernelCleanupSchedule
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:text
+          - urn:alm:descriptor:com.tectonic.ui:advanced
+        - description: "By default kernel & job cleanup cronjobs look for idle spark kernels/jobs and based on kernelCullTime parameter it teminates them, if you want cleanup less/more aggressively change accordingly. e.g for 1 hour * */1 * * * k8s format."
+          displayName: Spark job cleanup schedule
+          path: serviceConfig.jobCleanupSchedule
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:text
+          - urn:alm:descriptor:com.tectonic.ui:advanced
+        - description: "Spark runtime configuration to set max driver CPUs allowed for spark job."
+          displayName: Max allowed spark job driver CPU cores
+          path: sparkRuntimeConfig.maxDriverCpuCores
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+        - description: "Spark runtime configuration to set max execute CPUs allowed per executor for spark job."
+          displayName: Max allowed spark job executor CPU cores
+          path: sparkRuntimeConfig.maxExecutorCpuCores
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+        - description: "Spark runtime configuration to set max driver memory allowed for spark job."
+          displayName: Max allowed spark driver memory
+          path: sparkRuntimeConfig.maxDriverMemory
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:text
+        - description: "Spark runtime configuration to set max executor memory allowed per executor for spark job."
+          displayName: Max allowed spark executor memory
+          path: sparkRuntimeConfig.maxExecutorMemory
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:text
+        - description: "Spark runtime configuration to set max number of executors allowed per spark job"
+          displayName: Max allowed number of executors per spark job
+          path: sparkRuntimeConfig.maxNumWorkers
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+        - description: "Default CPU quota means accumulative CPU consumption of spark jobs created under an instance can be no more than set value"
+          displayName: CPU quota per AnalyticsEngine service instance
+          path: serviceInstanceConfig.defaultCpuQuota
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
+        - description: "Default memory quota means accumulative memory consumption of spark jobs created under an instance can be no more than set value"
+          displayName: Memory quota per AnalyticsEngine service instance in GB
+          path: serviceInstanceConfig.defaultMemoryQuota
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:number
       statusDescriptors:
       - displayName: Version
         path: versions
