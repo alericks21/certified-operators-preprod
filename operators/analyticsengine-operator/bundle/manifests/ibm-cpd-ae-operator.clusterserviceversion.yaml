@@ -68,17 +68,17 @@ spec:
         version: v1
       specDescriptors:
         - description: "You must read and accept the license terms to install the software."
-         displayName: License
-         path: license
-       - description: "Service scale configuration for control plane installation."
-         displayName: scaleConfig
-         path: scaleConfig
-         value:
-         - small
-         x-descriptors:
-         - urn:alm:descriptor:com.tectonic.ui:select:small
-         - urn:alm:descriptor:com.tectonic.ui:select:medium
-         - urn:alm:descriptor:com.tectonic.ui:select:large
+          displayName: License
+          path: license
+        - description: "Service scale configuration for control plane installation."
+          displayName: scaleConfig
+          path: scaleConfig
+          value:
+          - small
+          x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:select:small
+          - urn:alm:descriptor:com.tectonic.ui:select:medium
+          - urn:alm:descriptor:com.tectonic.ui:select:large
        - displayName: Maintenance Mode
          description: Set maintenance mode to true to quiesce and backup the services.
          path: ignoreForMaintenance
