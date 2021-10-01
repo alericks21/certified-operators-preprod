@@ -81,7 +81,7 @@ spec:
                   jobCleanupSchedule:
                     type: string
                     default: "*/30 * * * *"
-              sparkRuntimeConfig: 
+              sparkRuntimeConfig:
                 type: object
                 properties:
                   maxDriverCpuCores:
