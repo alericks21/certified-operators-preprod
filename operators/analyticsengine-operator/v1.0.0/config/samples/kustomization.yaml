@@ -1,4 +1,0 @@
-## Append samples you want in your CSV to this file as resources ##
-resources:
-- ae_v1_analyticsengine.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples
