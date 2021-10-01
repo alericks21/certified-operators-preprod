@@ -673,4 +673,4 @@ spec:
     name: cpd
   version: 1.0.1
   defaultChannel: stable-v1
-  replaces: ibm-cpd-ae.v1.0.0
+  #  replaces: ibm-cpd-ae.v1.0.0
